@@ -27,6 +27,12 @@ $ pip install lxml
 
 ### Запуск
 
+Запуск в связке с shm-клиентом
+
+```sh
+$ python Flow.py --client='PATH_TO_CLIENT_APP' --connection='CONNECTION_NAME' --file='PATH_TO_TESTING_FLOW_FILE' --repeat=N_TIMES --timeout=N_MICROSECONDS
+```
+
 Запуск осуществляется со следующими ключами
 
 iedRunner директория:
