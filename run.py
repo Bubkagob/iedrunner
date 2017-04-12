@@ -2,13 +2,13 @@ import os
 import argparse
 import sys
 import re
-import traceback
 current_path=os.path.dirname(os.path.abspath(__file__))
 iec_path = os.path.join(current_path, 'iec61850')
 client_path = os.path.join(current_path, 'client')
 sys.path.append(client_path)
 sys.path.append(iec_path)
-from deviceparser import run_client
+
+from client import unit
 
 def is_ipv4(ip):
 	match = re.match("^(\d{0,3})\.(\d{0,3})\.(\d{0,3})\.(\d{0,3})$", ip)
@@ -24,42 +24,40 @@ def is_ipv4(ip):
 			return False
 	return True
 
+
+
+def is_valid_file(parser, arg):
+    arg = os.path.abspath(arg)
+    if not os.path.exists(arg):
+        parser.error("The file %s does not exist!" % arg)
+    else:
+        print("The file %s does exist" % arg)
+        return arg
+
 def inputFileParse():
     parser = argparse.ArgumentParser(prog = 'test')
-    parser.add_argument('-ip', '--ip', dest='IP', required=True, help='IED\'s IP Address')
-    parser.add_argument('-type', '--type', dest='DT', required=True, help='type DA')
-    parser.add_argument('-var', '--var', dest='VAR', required=True, help='variable name')
+    parser.add_argument('-f', '--file', type=lambda x: is_valid_file(parser, x), metavar="FILE", default='SCD.scd',  help='Name of xml-like 61850 file for %(prog)s program')
+    parser.add_argument('-ip', '--ip', dest='IED', required=True, help='IED\'s IP Address')
     return parser
 
-
+'''
+#############################################################################
+#                                  main                                     #
+#############################################################################
+'''
 
 if __name__ == '__main__':
     parser = inputFileParse()
-    result = parser.parse_args(sys.argv[1:])
-    isValidIp = is_ipv4(result.IP)
-    if isValidIp:
-        print('IP is valid: %s' % result.IP)
-        ip = result.IP
-        if(result.DT in 'fbtq'):
-            dt = result.DT
-            var = result.VAR
-            run_client(ip, dt, var)
+    filename = parser.parse_args(sys.argv[1:]).file
+    try:
+        isValidIp = is_ipv4(sys.argv[4])
+        if isValidIp:
+            print('IP is valid: %s' % sys.argv[4])
+            ip = sys.argv[4]
+            unit.run_all_tests(filename, ip) # <-------------Tests runs
         else:
-            print(result.DT, "isn't correct type")
-    else:
-        print('IP is invalid: %s' % result.IED)
-
-
-
-
-
-#run_client()
-
-#
-# if __name__ == "__main__":
-#     try:
-#     	run_client()
-#
-#     except:
-#     	print ("Error :")
-#     	traceback.print_exc(file=sys.stdout)
+            print('IP is invalid: %s' % sys.argv[4])
+    except ValueError:
+        print('IP is invalid: %s' % sys.argv[4])
+    except:
+        print('Invalid usage : %s  ip' % sys.argv[4])
