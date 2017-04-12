@@ -1620,6 +1620,14 @@ Timestamp_swigregister = _iec61850.Timestamp_swigregister
 Timestamp_swigregister(Timestamp)
 
 
+def Timestamp_create():
+    return _iec61850.Timestamp_create()
+Timestamp_create = _iec61850.Timestamp_create
+
+def Timestamp_destroy(arg1):
+    return _iec61850.Timestamp_destroy(arg1)
+Timestamp_destroy = _iec61850.Timestamp_destroy
+
 def Timestamp_clearFlags(arg1):
     return _iec61850.Timestamp_clearFlags(arg1)
 Timestamp_clearFlags = _iec61850.Timestamp_clearFlags
@@ -1671,6 +1679,10 @@ Timestamp_setTimeInSeconds = _iec61850.Timestamp_setTimeInSeconds
 def Timestamp_setTimeInMilliseconds(arg1, millisSinceEpoch):
     return _iec61850.Timestamp_setTimeInMilliseconds(arg1, millisSinceEpoch)
 Timestamp_setTimeInMilliseconds = _iec61850.Timestamp_setTimeInMilliseconds
+
+def Timestamp_setByMmsUtcTime(arg1, mmsValue):
+    return _iec61850.Timestamp_setByMmsUtcTime(arg1, mmsValue)
+Timestamp_setByMmsUtcTime = _iec61850.Timestamp_setByMmsUtcTime
 
 def LibIEC61850_getVersionString():
     return _iec61850.LibIEC61850_getVersionString()
@@ -2108,6 +2120,7 @@ IEC61850_GENERIC_BITSTRING = _iec61850.IEC61850_GENERIC_BITSTRING
 IEC61850_CONSTRUCTED = _iec61850.IEC61850_CONSTRUCTED
 IEC61850_ENTRY_TIME = _iec61850.IEC61850_ENTRY_TIME
 IEC61850_PHYCOMADDR = _iec61850.IEC61850_PHYCOMADDR
+IEC61850_CURRENCY = _iec61850.IEC61850_CURRENCY
 LogicalDeviceModelType = _iec61850.LogicalDeviceModelType
 LogicalNodeModelType = _iec61850.LogicalNodeModelType
 DataObjectModelType = _iec61850.DataObjectModelType
@@ -3508,3 +3521,5 @@ def toCharP(arg1):
     return _iec61850.toCharP(arg1)
 toCharP = _iec61850.toCharP
 # This file is compatible with both classic and new-style classes.
+
+

@@ -59,6 +59,16 @@ def getLNlist(ied):
                 ln_list.append(element)
         return ln_list
 
+
+def get_Pretty_LNlist(lnode):
+    if 'prefix' in lnode.attrib:
+        if(lnode.get('prefix')):
+            return (lnode.get('prefix')+lnode.get('lnClass')+lnode.get('inst'))
+        else:
+            return (lnode.get('lnClass')+lnode.get('inst'))
+    else:
+        return lnode.get('lnClass')
+
 def getDataSetList(lnodelist):
     ds_list=[]
     for lnode in lnodelist:

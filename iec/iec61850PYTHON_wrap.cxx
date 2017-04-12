@@ -15086,6 +15086,40 @@ SWIGINTERN PyObject *Timestamp_swigregister(PyObject *SWIGUNUSEDPARM(self), PyOb
   return SWIG_Py_Void();
 }
 
+SWIGINTERN PyObject *_wrap_Timestamp_create(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  Timestamp *result = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)":Timestamp_create")) SWIG_fail;
+  result = (Timestamp *)Timestamp_create();
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_Timestamp, 0 |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_Timestamp_destroy(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  Timestamp *arg1 = (Timestamp *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:Timestamp_destroy",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_Timestamp, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Timestamp_destroy" "', argument " "1"" of type '" "Timestamp *""'"); 
+  }
+  arg1 = reinterpret_cast< Timestamp * >(argp1);
+  Timestamp_destroy(arg1);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
 SWIGINTERN PyObject *_wrap_Timestamp_clearFlags(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   Timestamp *arg1 = (Timestamp *) 0 ;
@@ -15412,6 +15446,36 @@ SWIGINTERN PyObject *_wrap_Timestamp_setTimeInMilliseconds(PyObject *SWIGUNUSEDP
   } 
   arg2 = static_cast< uint64_t >(val2);
   Timestamp_setTimeInMilliseconds(arg1,arg2);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_Timestamp_setByMmsUtcTime(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  Timestamp *arg1 = (Timestamp *) 0 ;
+  MmsValue *arg2 = (MmsValue *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:Timestamp_setByMmsUtcTime",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_Timestamp, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Timestamp_setByMmsUtcTime" "', argument " "1"" of type '" "Timestamp *""'"); 
+  }
+  arg1 = reinterpret_cast< Timestamp * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_sMmsValue, 0 |  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Timestamp_setByMmsUtcTime" "', argument " "2"" of type '" "MmsValue *""'"); 
+  }
+  arg2 = reinterpret_cast< MmsValue * >(argp2);
+  Timestamp_setByMmsUtcTime(arg1,arg2);
   resultobj = SWIG_Py_Void();
   return resultobj;
 fail:
@@ -30842,6 +30906,8 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"new_Timestamp", _wrap_new_Timestamp, METH_VARARGS, NULL},
 	 { (char *)"delete_Timestamp", _wrap_delete_Timestamp, METH_VARARGS, NULL},
 	 { (char *)"Timestamp_swigregister", Timestamp_swigregister, METH_VARARGS, NULL},
+	 { (char *)"Timestamp_create", _wrap_Timestamp_create, METH_VARARGS, NULL},
+	 { (char *)"Timestamp_destroy", _wrap_Timestamp_destroy, METH_VARARGS, NULL},
 	 { (char *)"Timestamp_clearFlags", _wrap_Timestamp_clearFlags, METH_VARARGS, NULL},
 	 { (char *)"Timestamp_getTimeInSeconds", _wrap_Timestamp_getTimeInSeconds, METH_VARARGS, NULL},
 	 { (char *)"Timestamp_getTimeInMs", _wrap_Timestamp_getTimeInMs, METH_VARARGS, NULL},
@@ -30855,6 +30921,7 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"Timestamp_setSubsecondPrecision", _wrap_Timestamp_setSubsecondPrecision, METH_VARARGS, NULL},
 	 { (char *)"Timestamp_setTimeInSeconds", _wrap_Timestamp_setTimeInSeconds, METH_VARARGS, NULL},
 	 { (char *)"Timestamp_setTimeInMilliseconds", _wrap_Timestamp_setTimeInMilliseconds, METH_VARARGS, NULL},
+	 { (char *)"Timestamp_setByMmsUtcTime", _wrap_Timestamp_setByMmsUtcTime, METH_VARARGS, NULL},
 	 { (char *)"LibIEC61850_getVersionString", _wrap_LibIEC61850_getVersionString, METH_VARARGS, NULL},
 	 { (char *)"MmsValue_createArray", _wrap_MmsValue_createArray, METH_VARARGS, NULL},
 	 { (char *)"MmsValue_getArraySize", _wrap_MmsValue_getArraySize, METH_VARARGS, NULL},
@@ -32666,6 +32733,7 @@ SWIG_init(void) {
   SWIG_Python_SetConstant(d, "IEC61850_CONSTRUCTED",SWIG_From_int(static_cast< int >(IEC61850_CONSTRUCTED)));
   SWIG_Python_SetConstant(d, "IEC61850_ENTRY_TIME",SWIG_From_int(static_cast< int >(IEC61850_ENTRY_TIME)));
   SWIG_Python_SetConstant(d, "IEC61850_PHYCOMADDR",SWIG_From_int(static_cast< int >(IEC61850_PHYCOMADDR)));
+  SWIG_Python_SetConstant(d, "IEC61850_CURRENCY",SWIG_From_int(static_cast< int >(IEC61850_CURRENCY)));
   SWIG_Python_SetConstant(d, "LogicalDeviceModelType",SWIG_From_int(static_cast< int >(LogicalDeviceModelType)));
   SWIG_Python_SetConstant(d, "LogicalNodeModelType",SWIG_From_int(static_cast< int >(LogicalNodeModelType)));
   SWIG_Python_SetConstant(d, "DataObjectModelType",SWIG_From_int(static_cast< int >(DataObjectModelType)));

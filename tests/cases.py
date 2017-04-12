@@ -2,19 +2,10 @@ import os
 import sys
 from lxml import etree, objectify
 
-from sclparser import get_ip_list, getIEDbyIp, getLNlist
+from sclparser import get_ip_list, getIEDbyIp, getLNlist, get_Pretty_LNlist
 from deviceparser import checkConnected, getLNlist_fromIED
 
 tcpPort = 102
-
-def get_Pretty_LNlist(lnode):
-    if 'prefix' in lnode.attrib:
-        if(lnode.get('prefix')):
-            return (lnode.get('prefix')+lnode.get('lnClass')+lnode.get('inst'))
-        else:
-            return (lnode.get('lnClass')+lnode.get('inst'))
-    else:
-        return lnode.get('lnClass')
 
 def isIp_in_file(filename, ied_ip):
     if ied_ip in get_ip_list(filename):
@@ -37,5 +28,4 @@ def isLNodesEqual(filename, ied_ip):
         if get_Pretty_LNlist(lnode) not in device_list:
             print("Error on ", lnode.sourceline, "line")
             return False
-            
     return True
