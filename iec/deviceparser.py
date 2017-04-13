@@ -1,6 +1,6 @@
 import os,sys
 import traceback
-from iec61850 import *
+import iec61850
 
 tcpPort = 102
 

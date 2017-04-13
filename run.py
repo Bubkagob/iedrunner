@@ -2,13 +2,7 @@ import os
 import argparse
 import sys
 import re
-current_path=os.path.dirname(os.path.abspath(__file__))
-iec_path = os.path.join(current_path, 'iec61850')
-client_path = os.path.join(current_path, 'client')
-sys.path.append(client_path)
-sys.path.append(iec_path)
-
-from client import unit
+from tests import *
 
 def is_ipv4(ip):
 	match = re.match("^(\d{0,3})\.(\d{0,3})\.(\d{0,3})\.(\d{0,3})$", ip)
