@@ -35,9 +35,19 @@ $ python Flow.py --client='PATH_TO_CLIENT_APP' --connection='CONNECTION_NAME' --
 
 Запуск осуществляется со следующими ключами
 
-iedRunner директория:
+RUN.PY - Запуск тестов (Необходим работающий сервер + SCD/ICD/ файл)
 ```sh
-$ python run.py -f $file(имя_файла) -ip $ip(адрес_IED_устройства)
+$ python run.py --file=$FILENAME --ip=$IP --ied=$FULLIEDNAME
+```
+
+FLOW.PY - Запуск тестов через shared memory клиента (Необходим работающий сервер + файл с заготовленным потоком VarName, type, Value)
+```sh
+$ python flow.py --client=$PATH_TO_SHMCLIENT --connection=$SHMFILENAME --file=$PATH_TO_FLOW_FILE
+```
+
+OBSERVER.PY - Пробежаться по серверу, чтобы посмотреть структурку, пока на локалхосте, если хотите поменять - там внутри
+```sh
+$ python observer.py
 ```
 
 #### Отчет
