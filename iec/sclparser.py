@@ -19,6 +19,22 @@ def getConnectedAP_list(subnetwork_list):
             ap_list.append(capp)
     return ap_list
 
+def getLDeviceListFromIED(ied):
+    ld_list = []
+    gen = (device for device in ied.AccessPoint.Server.iterchildren() if device.get('inst'))
+    for device in gen:
+        ld_list.append(device)
+    return ld_list
+
+
+def getIED_LDnameList(scd):
+    iedname_list = []
+    for ied in getIEDlist(getRoot(scd)):
+        for ld in getLDeviceListFromIED(ied):
+            iedname_list.append(ied.get('name')+ld.get('inst'))
+    return iedname_list
+
+
 
 def get_ip_list(scd):
     ip_list = []
@@ -31,10 +47,16 @@ def get_ip_list(scd):
 
 def getIEDnameByIp(scd, ip):
     for ap in getConnectedAP_list(getSubnetwork_list(getRoot(scd))):
-        for address in ap.Address.iterchildren():
-            if address.get('type') == 'IP' and address == ip:
-                return ap.get('iedName')
+        gen = (address for address in ap.Address.iterchildren() if address.get('type') == 'IP' and address == ip)
+        for address in gen:
+            return ap.get('iedName')
 
+
+def getLDbyIED_LDname(scd, iedldname):
+    for ied in getIEDlist(getRoot(scd)):
+        gen = (ld for ld in getLDeviceListFromIED(ied) if ied.get('name')+ld.get('inst')==iedldname)
+        for ld in gen:
+            return ld
 
 def getIEDlist(root):
     res_list=[]
@@ -128,44 +150,50 @@ def getEnumTypes(root):
 '''
 #############################################################################
 '''
-def LNTypes(scd):
-    root = objectify.parse(scd)
-    LNDataList = []
-    for ied in root.findall('{http://www.iec.ch/61850/2003/SCL}DataTypeTemplates'):
-         for ln in ied.LNodeType:
-             if ln.attrib.get('id'):
-                 LNDataList.append(ln.attrib.get('id'))
+# def LNTypes(scd):
+#     root = objectify.parse(scd)
+#     LNDataList = []
+#     for ied in root.findall('{http://www.iec.ch/61850/2003/SCL}DataTypeTemplates'):
+#          for ln in ied.LNodeType:
+#              if ln.attrib.get('id'):
+#                  LNDataList.append(ln.attrib.get('id'))
+#
+#     for d in root.findall('{http://www.iec.ch/61850/2003/SCL}IED'):
+#         for ln in d.AccessPoint.Server.LDevice.iterchildren():
+#             if ln.attrib.get('lnType'):
+#                 if ln.attrib.get('lnType') not in LNDataList:
+#                     print("Bad LNType is on", ln.sourceline, "line")
+#                     return False
+#     print("LNDataList", len(LNDataList))
+#     return True
 
-    for d in root.findall('{http://www.iec.ch/61850/2003/SCL}IED'):
-        for ln in d.AccessPoint.Server.LDevice.iterchildren():
-            if ln.attrib.get('lnType'):
-                if ln.attrib.get('lnType') not in LNDataList:
-                    print("Bad LNType is on", ln.sourceline, "line")
-                    return False
-    print("LNDataList", len(LNDataList))
-    return True
 
+# def DOTypes(scd):
+#     root = objectify.parse(scd)
+#     DODataList = []
+#     for ddt in root.findall('{http://www.iec.ch/61850/2003/SCL}DataTypeTemplates'):
+#          for do in ddt.DOType:
+#              if do.attrib.get('id'):
+#                  DODataList.append(do.attrib.get('id'))
+#
+#     for ddt in root.findall('{http://www.iec.ch/61850/2003/SCL}DataTypeTemplates'):
+#         for ln in ddt.LNodeType.iterchildren():
+#             for do in ln:
+#                 if do.get('type') not in DODataList:
+#                     print("Bad LNType is on", do.sourceline, "line")
+#                     return False
+#     print("DODataList", len(DODataList))
+#     return True
 
-def DOTypes(scd):
-    root = objectify.parse(scd)
-    DODataList = []
-    for ddt in root.findall('{http://www.iec.ch/61850/2003/SCL}DataTypeTemplates'):
-         for do in ddt.DOType:
-             if do.attrib.get('id'):
-                 DODataList.append(do.attrib.get('id'))
+# def newTest(scd):
+#     root = objectify.parse(scd)
+#     IEDList = []
+#     for ied in root.findall('{http://www.iec.ch/61850/2003/SCL}IED'):
+#         print(ied.get('name'), " ", ied.get('type'))
+#     return True
 
-    for ddt in root.findall('{http://www.iec.ch/61850/2003/SCL}DataTypeTemplates'):
-        for ln in ddt.LNodeType.iterchildren():
-            for do in ln:
-                if do.get('type') not in DODataList:
-                    print("Bad LNType is on", do.sourceline, "line")
-                    return False
-    print("DODataList", len(DODataList))
-    return True
-
-def newTest(scd):
-    root = objectify.parse(scd)
-    IEDList = []
-    for ied in root.findall('{http://www.iec.ch/61850/2003/SCL}IED'):
-        print(ied.get('name'), " ", ied.get('type'))
-    return True
+if __name__ == "__main__":
+    #print(get_ip_list("ECI.scd"))
+    #print(getIED_LDnameList("SCD.scd"))
+    print(getIED_LDnameList("ECI.scd"))
+    #print(getLDbyIED_LDname('ECI.scd','ECISepam20_21' ).get('inst'))

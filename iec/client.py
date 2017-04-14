@@ -5,24 +5,31 @@ import getch
 import iec61850
 
 
-tcpPort = 102
-ip = '127.0.0.1'
 running = 1
-
 class iecClient():
-    def __init__(self):
-        print("-"*60)
-        print("Trying to connect...")
-        self.__con = iec61850.IedConnection_create()
-        self.__timeout = iec61850.IedConnection_setConnectTimeout(self.__con, 2000)
-        self.__error = iec61850.IedConnection_connect(self.__con, ip, tcpPort)
-        if (self.__error == iec61850.IED_ERROR_OK):
-            print("Connected!")
-            running = 1
-        else:
-            print ("Connect failed")
+    def __init__(self, ip='127.0.0.1', tcpPort=102):
+        try:
+            self.__con = iec61850.IedConnection_create()
+            self.__timeout = iec61850.IedConnection_setConnectTimeout(self.__con, 2000)
+            self.__error = iec61850.IedConnection_connect(self.__con, ip, tcpPort)
+            if (self.__error == iec61850.IED_ERROR_OK):
+                running = 1
+        except Exception as e:
+            print('Connection exception: ', str(e))
             running = 0
-            sys.exit(-1)
+            #sys.exit(-1)
+
+    def getConnectionState(self):
+        return iec61850.IedConnection_getState(self.__con)
+
+    def getIEDnameList(self):
+        iednames = []
+        [deviceList, error] = iec61850.IedConnection_getLogicalDeviceList(self.__con)
+        device = iec61850.LinkedList_getNext(deviceList)
+        while device: #Iterate over each device from deviceList
+            iednames.append(iec61850.toCharP(device.data))
+            device = iec61850.LinkedList_getNext(device)
+        return iednames
 
     def readAttributes(self):
         rcb = self.__rcb
@@ -116,10 +123,8 @@ class iecClient():
         return qualityValue
 
     def stop(self):
-        print("Stopping connection...")
         iec61850.IedConnection_close(self.__con)
         iec61850.IedConnection_destroy(self.__con)
-        print("Stopped.")
         #sys.exit()
 
     def reportCallbackFunction(self, parameter, report):
@@ -155,7 +160,8 @@ class iecClient():
                 print("Dataset: (not deletable)")
         else:
             print ("Connection error status")
-            sys.exit(-1)
+            stop()
+            #sys.exit(-1)
 
     def installHandler(self):
         print("--------------------Install Report receiver")

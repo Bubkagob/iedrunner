@@ -1,41 +1,56 @@
 import unittest
-import os
-import sys
-from tests import cases
+from iec import client, sclparser
 
 class IECTestCase(unittest.TestCase):
-    def __init__(self, testname, filename, ip):
+    def __init__(self,  testname, filename, ip, iedname):
         super(IECTestCase, self).__init__(testname)
-        self.FILENAME = filename
-        self.IP = ip
-
+        self.__FILENAME = filename
+        self.__IP = ip
+        self.__IEDNAME = iedname
+        self.clt = client.iecClient(self.__IP)
+# '''
+# Связь с сервером? Если нет --> Отмена теста
+# '''
+        try:
+            self.assertTrue(self.clt.getConnectionState())
+        except Exception:
+            self.skipTest("Connection error")
+#
+# Имеется ли ied из аргументов в сервере. Если нет --> Отмена теста
+#
+        try:
+            self.assertTrue(self.__IEDNAME in self.clt.getIEDnameList())
+        except Exception:
+            self.skipTest("IED not in Server")
+# '''
+# Имеется ли ied в списке ied+ldinst в файле. Если нет --> Отмена теста
+# '''
+        try:
+            self.assertTrue(self.__IEDNAME in sclparser.getIED_LDnameList(self.__FILENAME))
+        except Exception:
+            self.skipTest("LD instance not in File")
     def setUp(self):
         pass
 
     def tearDown(self):
-        pass
-
-    def test_IP_is_in_file(self):
-        print('\ntest IP is in file?')
-        self.assertTrue(cases.isIp_in_file(filename = self.FILENAME, ied_ip=self.IP))
-        print('Success')
-
-    def test_Connect(self):
-        print('\ntest Connection to IED')
-        self.assertTrue(cases.isConnect(ied_ip=self.IP))
-        print('Success')
+        self.clt.stop()
 
 
-    def test_Validate_LNodes(self):
-        print('\nvalidate Logical Nodes in IED')
-        self.assertTrue(cases.isLNodesEqual(filename = self.FILENAME, ied_ip=self.IP))
-        print('Success')
+    #connect state btwn client - server
+    def test_connection(self):
+        self.assertTrue(self.clt.getConnectionState())
+
+    def test_print(self):
+        self.assertTrue(True)
+
+    @unittest.skipIf(not test_connection, "Reason: connection_test Failed")
+    def test_skip(self):
+        self.assertTrue(True)
 
 
-
-def run_all_tests(filename, ip):
+def run_all_tests(filename, ip, iedname):
     suite = unittest.TestSuite()
-    suite.addTest(IECTestCase("test_IP_is_in_file", filename, ip))
-    suite.addTest(IECTestCase("test_Connect", filename, ip))
-    suite.addTest(IECTestCase("test_Validate_LNodes", filename, ip))
-    unittest.TextTestRunner().run(suite)
+    suite.addTest(IECTestCase("test_connection", filename, ip, iedname))
+    suite.addTest(IECTestCase("test_print", filename, ip, iedname))
+    suite.addTest(IECTestCase("test_skip", filename, ip, iedname))
+    unittest.TextTestRunner(verbosity=2).run(suite)
