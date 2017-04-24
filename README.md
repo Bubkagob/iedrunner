@@ -27,17 +27,20 @@ $ pip install lxml
 
 ### Запуск
 
-Запуск в связке с shm-клиентом
 
+RUN.PY - Запуск тестов (Необходим работающий сервер + SCD/ICD/ файл)
 ```sh
-$ python Flow.py --client='PATH_TO_CLIENT_APP' --connection='CONNECTION_NAME' --file='PATH_TO_TESTING_FLOW_FILE' --repeat=N_TIMES --timeout=N_MICROSECONDS
+$ python run.py --file=$FILENAME --ip=$IP --ied=$FULLIEDNAME
 ```
 
-Запуск осуществляется со следующими ключами
-
-iedRunner директория:
+FLOW.PY - Запуск тестов через shared memory клиента (Необходим работающий сервер + файл с заготовленным потоком VarName, type, Value)
 ```sh
-$ python run.py -f $file(имя_файла) -ip $ip(адрес_IED_устройства)
+$ python flow.py --client=$PATH_TO_SHMCLIENT --connection=$SHMFILENAME --file=$PATH_TO_FLOW_FILE  --repeat=$N_TIMES --timeout=$N_MICROSECONDS
+```
+
+OBSERVER.PY - Пробежаться по серверу, чтобы посмотреть структурку, пока на локалхосте, если хотите поменять - там внутри
+```sh
+$ python observer.py
 ```
 
 #### Отчет
