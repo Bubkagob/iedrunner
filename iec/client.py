@@ -6,7 +6,7 @@ import iec61850
 
 
 running = 1
-class iecClient():
+class IecClient():
     def __init__(self, ip='127.0.0.1', tcpPort=102):
         try:
             self.__con = iec61850.IedConnection_create()
@@ -19,17 +19,70 @@ class iecClient():
             running = 0
             #sys.exit(-1)
 
-    def getConnectionState(self):
+    def get_connection_state(self):
         return iec61850.IedConnection_getState(self.__con)
 
-    def getIEDnameList(self):
+    def get_ied_ld_names(self):
         iednames = []
         [deviceList, error] = iec61850.IedConnection_getLogicalDeviceList(self.__con)
         device = iec61850.LinkedList_getNext(deviceList)
         while device: #Iterate over each device from deviceList
             iednames.append(iec61850.toCharP(device.data))
             device = iec61850.LinkedList_getNext(device)
+        iec61850.LinkedList_destroy(deviceList)
         return iednames
+
+    def get_name_of(self, obj):
+        return iec61850.toCharP(obj.data)
+
+    def get_model_from_server(self):
+        model = iec61850.IedConnection_getDeviceModelFromServer(self.__con)
+
+    def get_ld_list(self):
+        ld_list = []
+        [ldList, self.__error] = iec61850.IedConnection_getLogicalDeviceList(self.__con)
+        device = iec61850.LinkedList_getNext(ldList)
+        while device: #Iterate over each device from deviceList
+            ld_list.append(device)
+            device = iec61850.LinkedList_getNext(device)
+        #iec61850.LinkedList_destroy(ldList)
+        return ld_list
+
+    def get_ln(self, ld, lname):
+        return iec61850.LogicalDevice_getLogicalNode(ld, lname)
+
+    def get_ln_list_from_ld(self, ld):
+        ln_list = []
+        [lNodes, self.__error] = iec61850.IedConnection_getLogicalDeviceDirectory(self.__con, iec61850.toCharP(ld.data))
+        lnode = iec61850.LinkedList_getNext(lNodes)
+        while lnode:#Iterate over each node from LNodeList
+            ln_list.append(lnode)
+            lnode = iec61850.LinkedList_getNext(lnode)
+        #iec61850.LinkedList_destroy(lNodes)
+        return ln_list
+
+    def get_dobject_names(self, ld, ln):
+        [dataObjects, self.__error] = iec61850.IedConnection_getLogicalNodeDirectory(self.__con, self.get_name_of(ld)+'/'+self.get_name_of(ln), iec61850.ACSI_CLASS_DATA_OBJECT)
+        dobject = iec61850.LinkedList_get(dataObjects, 0)
+        iIndex = 1
+        do_names = []
+        while dobject:
+            do_names.append(iec61850.toCharP(dobject.data))
+            dobject = iec61850.LinkedList_get(dataObjects, iIndex)
+            iIndex += 1
+        iec61850.LinkedList_destroy(dataObjects)
+        return do_names
+
+
+    def get_ln_names(self, ld):
+        ln_names = []
+        [logicalNodes, self.__error] = iec61850.IedConnection_getLogicalDeviceDirectory(self.__con, iec61850.toCharP(ld.data))
+        lnode = iec61850.LinkedList_getNext(logicalNodes)
+        while lnode:#Iterate over each node from LNodeList
+            ln_names.append(iec61850.toCharP(lnode.data))
+            lnode = iec61850.LinkedList_getNext(lnode)
+        iec61850.LinkedList_destroy(logicalNodes)
+        return ln_names
 
     def readAttributes(self):
         rcb = self.__rcb
@@ -101,6 +154,10 @@ class iecClient():
             else:
                 print("Key Pressed:" + str(pressedKey))
 
+    def readBoolean(self, var):
+        [booleanValue, self.__error] = iec61850.IedConnection_readBooleanValue(self.__con, var, iec61850.IEC61850_FC_ST)
+        return booleanValue
+
     def readFloat(self, var):
         [floatValue, self.__error] = iec61850.IedConnection_readFloatValue(self.__con, var, iec61850.IEC61850_FC_MX)
         return floatValue
@@ -109,9 +166,9 @@ class iecClient():
         [intValue, self.__error] = iec61850.IedConnection_readFloatValue(self.__con, var, iec61850.IEC61850_FC_MX)
         print("int8-32 Value:            ", intValue)
 
-    def readTimeStamp(self, var):
+    def readTimeStamp(self, var, type=iec61850.IEC61850_FC_MX):
         time = iec61850.Timestamp()
-        [timeStampValue, self.__error] = iec61850.IedConnection_readTimestampValue(self.__con, var, iec61850.IEC61850_FC_MX, time)
+        [timeStampValue, self.__error] = iec61850.IedConnection_readTimestampValue(self.__con, var, var, time)
         return iec61850.Timestamp_getTimeInMs(time)
 
     def readInt32(self, var):
@@ -193,9 +250,17 @@ class iecClient():
 
 if __name__ == "__main__":
     try:
-        clt=iecClient()
-        cltThread = threading.Thread(target = clt.run)
-        cltThread.start()
+        clt=IecClient()
+        #cltThread = threading.Thread(target = clt.run)
+        #cltThread.start()
+        clt.get_model_from_server()
+        for ld in clt.get_ld_list():
+            print("Checkin===",clt.get_name_of(ld))
+            print("##########")
+            for ln in clt.get_ln_list(ld):
+                print("Working with LN ---- > ", clt.get_name_of(ln))
+                #clt.get_ln(ld, clt.get_name_of(ln))
+        clt.stop()
     except:
         running = 0
         print ("Error :")

@@ -29,7 +29,7 @@ def is_valid_file(parser, arg):
 
 def inputFileParse():
     parser = argparse.ArgumentParser(prog = os.path.basename(__file__))
-    parser.add_argument('-f', '--file', dest='filename', type=lambda x: is_valid_file(parser, x), metavar="FILE", default='SCD.scd',  help='Name of xml-like 61850 file for %(prog)s program')
+    parser.add_argument('-f', '--file', dest='filename', type=lambda x: is_valid_file(parser, x), required=True, metavar="FILE", help='Name of xml-like 61850 file for %(prog)s program')
     parser.add_argument('-ip', '--ip', dest='ip', type=lambda x: is_ipv4(parser, x), required=True, help='Server ip')
     parser.add_argument('-ied', '--ied', dest='iedname', required=True, help='full IED name')
     return parser
@@ -44,6 +44,7 @@ if __name__ == '__main__':
 
     [filename, ip, iedname] = inputFileParse().parse_args().filename, inputFileParse().parse_args().ip, inputFileParse().parse_args().iedname,
     try:
+        unit.run_scl_types_tests(filename)
         unit.run_all_tests(filename, ip, iedname) # <-------------Tests runs
     except Exception as e:
         print('Exception: ', str(e))
