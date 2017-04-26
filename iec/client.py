@@ -180,6 +180,7 @@ class IecClient():
         return qualityValue
 
     def stop(self):
+        print("stopping")
         iec61850.IedConnection_close(self.__con)
         iec61850.IedConnection_destroy(self.__con)
         #sys.exit()

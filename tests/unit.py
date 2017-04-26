@@ -1,3 +1,4 @@
+import sys
 import unittest
 import lxml
 from iec import client, sclparser
@@ -15,14 +16,26 @@ class SCLTestCase(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def test_types(self):
-        self.assertTrue(self.scl.is_all_types_is_ok())
+    def test_lnodetypes(self):
+        self.assertTrue(self.scl.is_lnode_types_ok())
+
+    def test_dotypes(self):
+        self.assertTrue(self.scl.is_do_types_ok())
+
+    def test_datypes(self):
+        self.assertTrue(self.scl.is_da_types_ok())
+
+    def test_enumtypes(self):
+        self.assertTrue(self.scl.is_enum_types_ok())
 
     def test_ied_attributes(self):
         self.assertTrue(self.scl.is_all_attributes_in_ied_is_ok())
 
     def test_ln_attributes(self):
         self.assertTrue(self.scl.is_all_attributes_in_ln_is_ok())
+
+    def test_do_attributes(self):
+        self.assertTrue(self.scl.is_all_attributes_in_do_is_ok())
 
     def test_ds_attributes(self):
         self.assertTrue(self.scl.is_all_attributes_in_ds_is_ok())
@@ -35,6 +48,12 @@ class SCLTestCase(unittest.TestCase):
 
     def test_rc_refs(self):
         self.assertTrue(self.scl.is_all_report_control_linked())
+
+    def test_types(self):
+        self.assertTrue(self.scl.is_all_types_is_ok())
+
+    def test_types_v2(self):
+        self.assertTrue(self.scl.is_all_params_in())
 
 class IECTestCase(unittest.TestCase):
     def __init__(self,  testname, filename, ip, ied_ld_name):
@@ -53,21 +72,23 @@ class IECTestCase(unittest.TestCase):
         try:
             self.assertTrue(self.clt.get_connection_state())
         except Exception:
-            self.skipTest("Connection error")
+            self.clt.stop()
+            self.skipTest("Reason: Connection error")
 #
 # Имеется ли ied из аргументов в сервере. Если нет --> Отмена теста
 #
         try:
             self.assertTrue(self.__IEDLDNAME in self.clt.get_ied_ld_names())
         except Exception:
-            self.skipTest("IED not in Server")
+            self.clt.stop()
+            self.skipTest("Reason: IED not in Server")
 # '''
 # Имеется ли ied в списке ied+ldinst в файле. Если нет --> Отмена теста
 # '''
         try:
             self.assertTrue(self.__IEDLDNAME in self.scl.get_ied_ld_names())
         except Exception:
-            self.skipTest("LD instance not in File")
+            self.skipTest("Reason: LD instance not in File")
 
     def tearDown(self):
         self.clt.stop()
@@ -87,20 +108,32 @@ class IECTestCase(unittest.TestCase):
         self.assertTrue(True)
 
 
-def run_scl_types_tests(filename):
+def run_all_tests(filename, ip, ied_ld_name):
+    #test_suite for file tester
     suite = unittest.TestSuite()
-    suite.addTest(SCLTestCase("test_types", filename))
+    suite.addTest(SCLTestCase("test_lnodetypes", filename))
+    suite.addTest(SCLTestCase("test_dotypes", filename))
+    suite.addTest(SCLTestCase("test_datypes", filename))
+    suite.addTest(SCLTestCase("test_enumtypes", filename))
     suite.addTest(SCLTestCase("test_ied_attributes", filename))
     suite.addTest(SCLTestCase("test_ln_attributes", filename))
+    suite.addTest(SCLTestCase("test_do_attributes", filename))
     suite.addTest(SCLTestCase("test_ds_attributes", filename))
     suite.addTest(SCLTestCase("test_ds_refs", filename))
     suite.addTest(SCLTestCase("test_rc_attributes", filename))
     suite.addTest(SCLTestCase("test_rc_refs", filename))
-    unittest.TextTestRunner(verbosity=2).run(suite)
-
-def run_all_tests(filename, ip, ied_ld_name):
-    suite = unittest.TestSuite()
-    suite.addTest(IECTestCase("test_connection", filename, ip, ied_ld_name))
-    suite.addTest(IECTestCase("test_structure_check_in_server", filename, ip, ied_ld_name))
-    suite.addTest(IECTestCase("test_skip", filename, ip, ied_ld_name))
-    unittest.TextTestRunner(verbosity=2).run(suite)
+    suite.addTest(SCLTestCase("test_types", filename))
+    suite.addTest(SCLTestCase("test_types_v2", filename))
+    runnerSCL = unittest.TextTestRunner(verbosity=2)
+    resultSCL = runnerSCL.run(suite)
+    status_one = len(resultSCL.failures) + len(resultSCL.errors) + len(resultSCL.skipped)
+    #test suite for client-server
+    suiteIEC = unittest.TestSuite()
+    suiteIEC.addTest(IECTestCase("test_connection", filename, ip, ied_ld_name))
+    suiteIEC.addTest(IECTestCase("test_structure_check_in_server", filename, ip, ied_ld_name))
+    suiteIEC.addTest(IECTestCase("test_skip", filename, ip, ied_ld_name))
+    runnerIEC = unittest.TextTestRunner(verbosity=2)
+    resultIEC = runnerIEC.run(suiteIEC)
+    status_two = len(resultIEC.failures) + len(resultIEC.errors) + len(resultIEC.skipped)
+    #exit wiht status code
+    sys.exit(status_one+status_two)

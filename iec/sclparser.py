@@ -116,14 +116,14 @@ class SclParser:
             do_list.append(do)
         return do_list
 
-    def get_names_from_datatype(self, dotype):
+    def get_da_names_from_dotype(self, dotype):
         da_list = []
         for da in dotype.iterchildren():
             da_list.append(da.get('name'))
         return da_list
 
     def check_dai(self, dai, dotype):
-        if dai.get('name') in self.get_names_from_datatype(dotype):
+        if dai.get('name') in self.get_da_names_from_dotype(dotype):
             return True
         else:
             print("Failed with DAI ckecking === > ", dai.get('name'), "on line", dai.sourceline)
@@ -136,7 +136,7 @@ class SclParser:
             print(el.get('type'))
 
     def check_sdi(self, sdi, dotype):
-        if sdi.get('name') in self.get_names_from_datatype(dotype):
+        if sdi.get('name') in self.get_da_names_from_dotype(dotype):
             return True
         else:
             print("Failed with SDI ckecking === > ", sdi.get('name'), "on line", sdi.sourceline)
@@ -208,18 +208,48 @@ class SclParser:
 
     #print all LNodeType names from file
     def get_lntype_list_from_file(self):
+        res_list = []
         for lntype in self.__ddt.LNodeType:
-            print(lntype.get('id'))
+            res_list.append(lntype)
+        return res_list
 
     #print all DOType names from file
     def get_dotype_list_from_file(self):
+        res_list = []
         for do_type in self.__ddt.DOType:
-            print(do_type.get('id'))
+            res_list.append(do_type)
+        return res_list
 
     #print all DAType names from file
     def get_datype_list_from_file(self):
-        for do_type in self.__ddt.DAType:
-            print(do_type.get('id'))
+        res_list = []
+        for da_type in self.__ddt.DAType:
+            res_list.append(da_type)
+        return res_list
+
+    #print all DAType names from file
+    def get_enum_list_from_file(self):
+        res_list = []
+        for enum in self.__ddt.EnumType:
+            res_list.append(enum)
+        return res_list
+
+    def get_dotype_by_id(self, dotypeid):
+        gen = (dotype for dotype in self.get_dotype_list_from_file() if dotype.get('id')==dotypeid)
+        for do_type in gen:
+            return do_type
+
+    def get_datype_by_id(self, datypeid):
+        gen = (datype for datype in self.get_datype_list_from_file() if datype.get('id')==datypeid)
+        for da_type in gen:
+            return da_type
+
+    def get_enum_by_id(self, enumid):
+        gen = (enumtype for enumtype in self.get_enum_list_from_file() if enumtype.get('id')==enumid)
+        for enum in gen:
+            return enum
+
+
 
     def get_dotype_from_lntype_by_name(self, lntype, doiname):
         gen = (do for do in lntype.DO if do.get('name')==doiname)
@@ -229,23 +259,32 @@ class SclParser:
     def __get_dotypeobj_by_id(self, dotypeid):
         gen = (dotype for dotype in self.__ddt.DOType if dotype.get('id')==dotypeid)
         for dotype in gen:
-            #print("вернули DOType:\t\t\t\t\t",dotype.get('id'))
             return dotype
 
     def get_dotypelist_from_lntype_by_lnid(self, lnid):
         do_list = []
         gen = (lntype for lntype in self.__ddt.LNodeType if lntype.get('id')==lnid)
         for lnodetype in gen:
-            #print("вернули LNodeType:\t\t\t\t",lnodetype.get('id'))
             for do in lnodetype.iterchildren():
                 do_list.append(do.get('name'))
+        return do_list
+
+    def get_do_list_from_lntype(self, lnodetype):
+        do_list = []
+        for do in lnodetype.iterchildren():
+            do_list.append(do.get('name'))
+        return do_list
+
+    def get_dotype_list_from_lntype(self, lnodetype):
+        do_list = []
+        for do in lnodetype.iterchildren():
+            do_list.append(do.get('type'))
         return do_list
 
 
     def get_lntype_by_id(self, idtype):
         gen = (lntype for lntype in self.__ddt.LNodeType if lntype.get('id')==idtype)
         for lnodetype in gen:
-            #print("вернули LNodeType:\t\t\t\t",lnodetype.get('id'))
             return lnodetype
 
     def get_ds_list_from_ld(self, ld):
@@ -281,24 +320,96 @@ class SclParser:
             else:
                 return (fcda.get('lnClass'))
 
-    # ========= 1 test Присутствуют все типы, используемые в ied
-    def is_all_types_is_ok(self):
-        for ied in self.get_ied_list():
-            for ld in self.__get_ld_list_from_ied(ied):
-                for ln in self.__get_ln_list_from_ld(ld):
-                    lnt = self.get_lntype_by_id(ln.get('lnType'))
-                    for doi in self.__get_doi_list_from_ln(ln):
-                        dotype_list = self.get_dotypelist_from_lntype_by_lnid(ln.get('lnType'))
-                        dotype = self.get_dotype_from_lntype_by_name(lnt, doi.get('name'))
-                        if not doi.get('name') in dotype_list:
-                            print("DOI ", doi.get('name'), "from line ", doi.sourceline, "not in LNodeType", ln.get('lnType'))
-                            return False
-                        for dai in self.__get_dai_list_from_do(doi):
-                            if not self.check_dai(dai, dotype):
-                                return False
-                        for sdi in self.__get_sdi_list_from_do(doi):
-                            if not self.check_sdi(sdi, dotype):
-                                return False
+    def get_do_type_by_id_from_lntype(self, lnodetype, doi_name):
+        gen = (dotype for dotype in lnodetype.iterchildren() if dotype.get('name')==doi_name)
+        for do in gen:
+            return self.get_dotype_by_id(do.get('type'))
+
+    def get_sdo_type_by_id_from_dotype(self, lnodetype, doi_name):
+        gen = (dotype for dotype in lnodetype.iterchildren() if dotype.get('name')==doi_name)
+        for do in gen:
+            return self.get_dotype_by_id(do.get('type'))
+    # ========= 0 предварительная проверка LNodeTypes
+    def is_lnode_types_ok(self):
+        req_ln = ['id', 'lnClass']
+        req_dotype = ['name', 'type']
+        for lnodetype in self.get_lntype_list_from_file():
+            if not set(req_ln) <= set(lnodetype.keys()):
+                print("Not enough attributes in LNodeType on line", lnodetype.sourceline)
+                return False
+            for do_type in lnodetype.iterchildren():
+                if not set(req_dotype) <= set(do_type.keys()):
+                    print("Not enough attributes in DOType on line", do_type.sourceline)
+                    return False
+                if self.get_dotype_by_id(do_type.get('type')) is None:
+                    print("Cannot find DOType for DO on line", do_type.sourceline, "from LNodeType", lnodetype.get('id'), "on line", lnodetype.sourceline)
+                    return False
+        return True
+
+    # ========= 0 предварительная проверка DOTypes
+    def is_do_types_ok(self):
+        req_dotype = ['cdc', 'id']
+        req_da = ['fc', 'bType', 'name']
+        req_sdo = ['name', 'type']
+        for dotype in self.get_dotype_list_from_file():
+            if not set(req_dotype) <= set(dotype.keys()):
+                print("Not enough attributes in DOType on line", dotype.sourceline)
+                return False
+            for da in dotype.iterdescendants(tag='{*}DA'):
+                if not set(req_da) <= set(da.keys()):
+                    print("Not enough attributes in DA on line", da.sourceline, "from DOType", dotype.get('id'), "on line", dotype.sourceline)
+                    return False
+                if 'type' in da.keys() and da.get('bType')=='Struct':
+                    if self.get_datype_by_id(da.get('type')) is None:
+                        print("Cannot find DAType for DA with Structure on line", da.sourceline, "from DOType", dotype.get('id'), "on line", dotype.sourceline)
+                        return False
+                if 'type' in da.keys() and da.get('bType')=='Enum':
+                    if self.get_enum_by_id(da.get('type')) is None:
+                        print("Cannot find EnumType for DA with Enumeration on line", da.sourceline, "from DOType", dotype.get('id'), "on line", dotype.sourceline)
+                        return False
+            for sdo in dotype.iterdescendants(tag='{*}SDO'):
+                if not set(req_sdo) <= set(sdo.keys()):
+                    print("Not enough attributes in SDO on line", sdo.sourceline, "from DOType", dotype.get('id'), "on line", dotype.sourceline)
+                    return False
+                if self.get_dotype_by_id(sdo.get('type')) is None:
+                    print("Cannot find DOType for SDO on line", sdo.sourceline, "from DOType", dotype.get('id'), "on line", dotype.sourceline)
+                    return False
+        return True
+
+    # ========= 0 предварительная проверка LNodeTypes
+    def is_da_types_ok(self):
+        req_bda = ['bType', 'name']
+        for datype in self.get_datype_list_from_file():
+            if not 'id' in datype.keys() or datype.get('id')=='':
+                print("Not enough ID attribute or it is empty in DAType on line", datype.sourceline)
+                return False
+            for bda in datype.iterdescendants():
+                if not set(req_bda) <= set(bda.keys()):
+                    print("Not enough attributes in BDA on line", bda.sourceline, "from DAType", datype.get('id'), "on line", datype.sourceline)
+                    return False
+                for key in bda.keys():
+                    if bda.get(key)=='':
+                        print(key, "attribute is empty in BDA on line", bda.sourceline)
+                        return False
+                if 'type' in bda.keys() and bda.get('bType')=='Struct':
+                    if self.get_datype_by_id(bda.get('type')) is None:
+                        print("Cannot find DAType for BDA with Structure on line", bda.sourceline, "from DAType", datype.get('id'), "on line", datype.sourceline)
+                        return False
+                if 'type' in bda.keys() and bda.get('bType')=='Enum':
+                    if self.get_enum_by_id(bda.get('type')) is None:
+                        print("Cannot find EnumType for BDA with Enumeration on line", bda.sourceline, "from DAType", datype.get('id'), "on line", datype.sourceline)
+                        return False
+        return True
+
+    def is_enum_types_ok(self):
+        for enumtype in self.get_enum_list_from_file():
+            if not 'id' in enumtype.keys() or enumtype.get('id')=='':
+                print("Not enough ID attribute or it is empty in EnumType on line", enumtype.sourceline)
+                return False
+            for enumval in enumtype.iterdescendants():
+                if not 'ord' in enumval.keys() or enumval.get('ord')=='':
+                    print("Not enough ORD attribute or it is empty in EnumVal on line", enumval.sourceline, "from EnumType", enumtype.get('id'), "on line", enumtype.sourceline)
+                    return False
         return True
 
     # ========= 2 IED Присутствуют обязательные параметры
@@ -308,6 +419,10 @@ class SclParser:
             if not set(req) <= set(ied.keys()):
                 print("Not enough attributes in IED on line", ied.sourceline)
                 return False
+            for key in ied.keys():
+                if ied.get(key)=='':
+                    print(key, "attribute is empty in IED on line", ied.sourceline)
+                    return False
         return True
 
     # ========= 3 LN Присутствуют обязательные параметры
@@ -317,6 +432,12 @@ class SclParser:
             if not set(req) <= set(ln.keys()) :
                 print("Not enough attributes in LN on line", ln.sourceline)
                 return False
+            for key in ln.keys():
+                if ln.get(key)=='':
+                    if key in ['inst', 'prefix']: #for LN0 and without prefix nodes
+                        continue
+                    print(key, "attribute is empty in LN on line", ln.sourceline)
+                    return False
         return True
 
     # ========= 4 DS Присутствуют обязательные параметры
@@ -328,10 +449,18 @@ class SclParser:
                 if not set(req) <= set(ds.keys()) :
                     print("Not enough attributes in DS on line", ds.sourceline)
                     return False
+                for key in ds.keys():
+                    if ds.get(key)=='':
+                        print(key, "attribute is empty in DataSet on line", ds.sourceline)
+                        return False
                 for fcda in self.get_fcda_list_from_ds(ds):
                     if not set(req_fcda) <= set(fcda.keys()) :
                         print("Not enough attributes in FCDA on line", fcda.sourceline)
                         return False
+                    for key in fcda.keys():
+                        if fcda.get(key)=='':
+                            print(key, "attribute is empty in FCDA on line", fcda.sourceline, "from DataSet on line", ds.sourceline)
+                            return False
         return True
 
     # ========= 5 в DS указаны правильные привязки к lnode
@@ -352,8 +481,12 @@ class SclParser:
         for ld in self.get_ld_list_from_file():
             for rc in self.get_rc_list_from_ld(ld):
                 if not set(req) <= set(rc.keys()) :
-                    print("Not enough attributes in RC on line", rc.sourceline)
+                    print("Not enough attributes in RC on line", rc.sourceline, "from LDevice on line", ld.sourceline)
                     return False
+                for key in rc.keys():
+                    if rc.get(key)=='':
+                        print(key, "attribute is empty in ReportControl on line", rc.sourceline, "from LDevice on line", ld.sourceline)
+                        return False
         return True
 
     # ========= 7 в RC Присутствуют ссылки на имеющиеся dset
@@ -365,15 +498,83 @@ class SclParser:
                     return False
         return True
 
+    # ========= 8 в DO (from LNodeType) Присутствуют обязательные параметры
+    def is_all_attributes_in_do_is_ok(self):
+        req = ['name', 'type']
+        for lntype in self.get_lntype_list_from_file():
+            for do in lntype.iterchildren():
+                if not set(req) <= set(do.keys()):
+                    print("Not enough attributes in DO on line", do.sourceline, "from LNodeType", lntype.get('id'))
+                    return False
+        return True
+
+    # ========= 9 test Присутствуют все типы, используемые в ied
+    def is_all_types_is_ok(self):
+        for ied in self.get_ied_list():
+            for ld in self.__get_ld_list_from_ied(ied):
+                for ln in self.__get_ln_list_from_ld(ld):
+                    lnodetype = self.get_lntype_by_id(ln.get('lnType'))
+                    dotype_list = self.get_do_list_from_lntype(lnodetype)
+                    for doi in self.__get_doi_list_from_ln(ln):
+                        dotype = self.get_dotype_from_lntype_by_name(lnodetype, doi.get('name'))
+                        if not doi.get('name') in dotype_list:
+                            print("DOI ", doi.get('name'), "from line ", doi.sourceline, "not in LNodeType", ln.get('lnType'))
+                            return False
+                        for dai in self.__get_dai_list_from_do(doi):
+                            if not self.check_dai(dai, dotype):
+                                return False
+                        for sdi in self.__get_sdi_list_from_do(doi):
+                            if not self.check_sdi(sdi, dotype):
+                                return False
+        return True
+
+    # ========= FULL test Присутствуют все типы, используемые в ied
+    def is_all_params_in(self):
+        for ied in self.get_ied_list():
+            for ld in self.__get_ld_list_from_ied(ied):
+                for ln in self.__get_ln_list_from_ld(ld):
+                    lntype = self.get_lntype_by_id(ln.get('lnType'))
+                    do_list = self.get_do_list_from_lntype(lntype)
+                    for doi in self.__get_doi_list_from_ln(ln):
+                        if not doi.get('name'):
+                            print("DOI does not have a NAME attribute on line", doi.sourceline, " from LN ", ln.get('lnType'))
+                            return False
+                        if not doi.get('name') in do_list:
+                            print("DOI ", doi.get('name'), "from line ", doi.sourceline, "not in LNodeType", ln.get('lnType'))
+                            return False
+                        do_type = self.get_do_type_by_id_from_lntype(lntype, doi.get('name'))
+                        for dai in self.__get_dai_list_from_do(doi):
+                            for key in dai.keys():
+                                if dai.get(key)=='':
+                                    print(key, "attribute is empty in DAI on line", dai.sourceline, "from LN on line", ln.get('lnType'))
+                                    return False
+                            if not dai.get('name'):
+                                print("DAI does not have a NAME attribute on line", dai.sourceline, "from DOI", doi.get('name'), "from LN on line", ln.get('lnType'))
+                                return False
+                            if not dai.get('name') in self.get_da_names_from_dotype(do_type):
+                                 print("DAI from line", dai.sourceline, "has an unknown name, not from specific DOType", do_type.get('id'), "from line", do_type.sourceline)
+                                 return False
+                        for sdi in self.__get_sdi_list_from_do(doi):
+                            for key in sdi.keys():
+                                if sdi.get(key)=='':
+                                    print(key, "attribute is empty in SDI on line", sdi.sourceline, "from LN on line", ln.get('lnType'))
+                                    return False
+                            if not sdi.get('name'):
+                                print("SDI does not have a NAME attribute on line", sdi.sourceline, "from DOI", doi.get('name'), "from LN on line", ln.get('lnType'))
+                                return False
+                            sdo_type = self.get_do_type_by_id_from_lntype(lntype, doi.get('name'))
+                            if not sdi.get('name') in self.get_da_names_from_dotype(sdo_type):
+                                 print("SDI from line", sdi.sourceline, "has an unknown name, not from specific DOType", sdo_type.get('id'), "from line", sdo_type.sourceline)
+                                 return False
+        return True
+
 
     # ========= IECTestCase # test Присутствуют обязательные параметры
     def is_structure_equal(self, ied_ld_name, clt):
         ied = self.get_ied_by_iedld_name(ied_ld_name)
         ied_ld_list_from_file = self.get_ied_ld_names_by_ied(ied)
-        #print(ied_ld_list_from_file)
         for ld in clt.get_ld_list():
             ld_server_name = clt.get_name_of(ld)
-            #print("Check LD [SRV]", ld_server_name)
             if not ld_server_name in ied_ld_list_from_file:
                 print("Achtung! ===> " , ld_server_name, "not in file")
                 return False

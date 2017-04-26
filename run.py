@@ -44,7 +44,6 @@ if __name__ == '__main__':
 
     [filename, ip, iedname] = inputFileParse().parse_args().filename, inputFileParse().parse_args().ip, inputFileParse().parse_args().iedname,
     try:
-        unit.run_scl_types_tests(filename)
         unit.run_all_tests(filename, ip, iedname) # <-------------Tests runs
     except Exception as e:
         print('Exception: ', str(e))
