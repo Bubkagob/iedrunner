@@ -84,6 +84,18 @@ class IecClient():
         iec61850.LinkedList_destroy(logicalNodes)
         return ln_names
 
+    def get_rc_list_by_ldname(self, ldname):
+        rc_names = []
+        [reports, self.__error] = iec61850.IedConnection_getLogicalNodeDirectory(self.__con, ldname+'/LLN0', iec61850.ACSI_CLASS_BRCB)
+        report = iec61850.LinkedList_getNext(reports)
+        repIndex = 1
+        while report:
+            rc_names.append(iec61850.toCharP(report.data))
+            report = iec61850.LinkedList_get(reports, repIndex)
+            repIndex += 1
+        iec61850.LinkedList_destroy(reports)
+        return rc_names
+
     def readAttributes(self):
         rcb = self.__rcb
         print("*"*100)
@@ -180,7 +192,6 @@ class IecClient():
         return qualityValue
 
     def stop(self):
-        print("stopping")
         iec61850.IedConnection_close(self.__con)
         iec61850.IedConnection_destroy(self.__con)
         #sys.exit()

@@ -104,8 +104,8 @@ class IECTestCase(unittest.TestCase):
 
 
     @unittest.skipIf(not test_connection, "Reason: connection_test Failed")
-    def test_skip(self):
-        self.assertTrue(True)
+    def test_rcb_instance_name(self):
+        self.assertTrue(self.scl.is_rc_names_correct_in_server(self.__IEDLDNAME, self.clt))
 
 
 def run_all_tests(filename, ip, ied_ld_name):
@@ -131,7 +131,7 @@ def run_all_tests(filename, ip, ied_ld_name):
     suiteIEC = unittest.TestSuite()
     suiteIEC.addTest(IECTestCase("test_connection", filename, ip, ied_ld_name))
     suiteIEC.addTest(IECTestCase("test_structure_check_in_server", filename, ip, ied_ld_name))
-    suiteIEC.addTest(IECTestCase("test_skip", filename, ip, ied_ld_name))
+    suiteIEC.addTest(IECTestCase("test_rcb_instance_name", filename, ip, ied_ld_name))
     runnerIEC = unittest.TextTestRunner(verbosity=2)
     resultIEC = runnerIEC.run(suiteIEC)
     status_two = len(resultIEC.failures) + len(resultIEC.errors) + len(resultIEC.skipped)

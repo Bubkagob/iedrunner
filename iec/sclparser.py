@@ -305,6 +305,22 @@ class SclParser:
             rc_list.append(rc)
         return rc_list
 
+    def get_rcname_list_from_rc(self, rc):
+        rc_names = []
+        if hasattr(rc, 'RptEnabled'):
+            report_num = int(rc.RptEnabled.get('max'))
+            for i in range(report_num):
+                if report_num < 8:
+                    rcname = rc.get('name')+'0'+str(i+1)
+                else:
+                    rcname = rc.get('name')+str(i+1)
+                rc_names.append(rcname)
+        else:
+            rc_names.append(rc.get('name')+'01')
+        return rc_names
+
+
+
     def get_fcda_list_from_ds(self, ds):
         fcda_list = []
         for fcda in ds.iterchildren(tag='{*}FCDA'):
@@ -590,14 +606,19 @@ class SclParser:
                         return False
         return True
 
-    def test_ex(self):
-        ln_list=[]
-        for ied in self.get_ied_list():
-            for ld in self.__get_ld_list_from_ied(ied):
-                for ln in self.__get_ln_list_from_ld(ld):
-                    ln_list.append(ied.get('name')+ld.get('inst')+'/'+ln.get("lnType"))
-        print(ln_list)
-        return ln_list
+    def is_rc_names_correct_in_server(self, ied_ld_name, clt):
+        ied = self.get_ied_by_iedld_name(ied_ld_name)
+        for ld in self.__get_ld_list_from_ied(ied):
+            rc_names_from_server = clt.get_rc_list_by_ldname(ied.get('name')+ld.get('inst'))
+            for rcontrol in self.get_rc_list_from_ld(ld):
+                rc_names_from_file = self.get_rcname_list_from_rc(rcontrol)
+                for rcname in rc_names_from_file:
+                    if not rcname in rc_names_from_server:
+                        print("ReportControl", rcname, "from line", rcontrol.sourceline, "not in",ied.get('name')+ld.get('inst'),"from Server")
+                        return False
+        return True
+
+
 
 '''
 #############################################################################
@@ -611,7 +632,7 @@ if __name__ == "__main__":
         print("*"*100)
         for i in ls:
             scl=SclParser(i)
-            scl.get_ied_by_iedld_name('ECISepam20_7')
+            scl.test_ex()
             print("*"*100)
     except Exception as e:
         print('Exception: ', str(e) )
