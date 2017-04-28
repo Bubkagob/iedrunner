@@ -84,9 +84,21 @@ class IecClient():
         iec61850.LinkedList_destroy(logicalNodes)
         return ln_names
 
-    def get_rc_list_by_ldname(self, ldname):
+    def get_rcbr_list_by_ldname(self, ldname):
         rc_names = []
         [reports, self.__error] = iec61850.IedConnection_getLogicalNodeDirectory(self.__con, ldname+'/LLN0', iec61850.ACSI_CLASS_BRCB)
+        report = iec61850.LinkedList_getNext(reports)
+        repIndex = 1
+        while report:
+            rc_names.append(iec61850.toCharP(report.data))
+            report = iec61850.LinkedList_get(reports, repIndex)
+            repIndex += 1
+        iec61850.LinkedList_destroy(reports)
+        return rc_names
+
+    def get_rcrp_list_by_ldname(self, ldname):
+        rc_names = []
+        [reports, self.__error] = iec61850.IedConnection_getLogicalNodeDirectory(self.__con, ldname+'/LLN0', iec61850.ACSI_CLASS_URCB)
         report = iec61850.LinkedList_getNext(reports)
         repIndex = 1
         while report:
@@ -211,11 +223,40 @@ class IecClient():
         print("Report received!")
 
     def getRCB(self):
-        [self.__rcb, error] = iec61850.IedConnection_getRCBValues(self.__con, "TEMPLATELD0/LLN0.BR.brcbMX0101", None)
+        [self.__rcb, error] = iec61850.IedConnection_getRCBValues(self.__con, "ECISepam80_8/LLN0.BR.brcbMX01", None)
         if (error == iec61850.IED_ERROR_OK):
             print("RCB read success")
         else:
             print("failed to read RCB")
+
+
+    def get_rcb_dictionary(self, report_name):
+        [self.__rcb, error] = iec61850.IedConnection_getRCBValues(self.__con, report_name, None)
+        if (error == iec61850.IED_ERROR_OK):
+            rcb_dict = {}
+            rcb_dict['buffered'] = iec61850.ClientReportControlBlock_isBuffered(self.__rcb)
+            rcb_dict['bufTime'] = str(iec61850.ClientReportControlBlock_getBufTm(self.__rcb))
+            rcb_dict['confRev'] = str(iec61850.ClientReportControlBlock_getConfRev(self.__rcb))
+            #rcb_dict['datSet'] = iec61850.ClientReportControlBlock_getDataSetReference(self.__rcb)
+            #rcb_dict['CBref'] = iec61850.ClientReportControlBlock_getObjectReference(self.__rcb)
+            rcb_dict['rptID'] = iec61850.ClientReportControlBlock_getRptId(self.__rcb)
+            rcb_dict['trgOpt'] = format(iec61850.ClientReportControlBlock_getTrgOps(self.__rcb), '04b')
+            rcb_dict['OptFields'] = format(iec61850.ClientReportControlBlock_getOptFlds(self.__rcb), '05b')
+            rcb_dict['dchg'] = bool(rcb_dict['trgOpt'][-1] == '1')
+            rcb_dict['qchg'] = bool(rcb_dict['trgOpt'][-2]== '1')
+            rcb_dict['dupd'] = bool(rcb_dict['trgOpt'][-3] == '1')
+            rcb_dict['period'] = bool(rcb_dict['trgOpt'][-4] == '1')
+            rcb_dict['seqNum'] = bool(rcb_dict['OptFields'][-1] == '1')
+            rcb_dict['timeStamp'] = bool(rcb_dict['OptFields'][-2] == '1')
+            rcb_dict['reasonCode'] = bool(rcb_dict['OptFields'][-3] == '1')
+            rcb_dict['dataSet'] = bool(rcb_dict['OptFields'][-4]== '1')
+            rcb_dict['dataRef'] = bool(rcb_dict['OptFields'][-5]== '1')
+            return rcb_dict
+        else:
+            print("failed to read RCB")
+            self.stop()
+
+
 
     def getDataSetDirectory(self):
         isDel = None
@@ -229,7 +270,7 @@ class IecClient():
                 print("Dataset: (not deletable)")
         else:
             print ("Connection error status")
-            stop()
+            self.stop()
             #sys.exit(-1)
 
     def installHandler(self):
@@ -269,9 +310,11 @@ if __name__ == "__main__":
         for ld in clt.get_ld_list():
             print("Checkin===",clt.get_name_of(ld))
             print("##########")
-            for ln in clt.get_ln_list(ld):
-                print("Working with LN ---- > ", clt.get_name_of(ln))
-                #clt.get_ln(ld, clt.get_name_of(ln))
+            for rc in clt.get_rcbr_list_by_ldname(clt.get_name_of(ld)):
+                print("Working with RC buffered ---- > ", rc)
+            for rp in clt.get_rcrp_list_by_ldname(clt.get_name_of(ld)):
+                print("Working with RC Unbuffered ---- > ", rp)
+        clt.get_rcb_dictionary('RP3_46LD0/LLN0.BR.brcbST01')
         clt.stop()
     except:
         running = 0

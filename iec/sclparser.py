@@ -467,6 +467,8 @@ class SclParser:
                     return False
                 for key in ds.keys():
                     if ds.get(key)=='':
+                        if key in ['desc']: #for LN0 and without prefix nodes
+                            continue
                         print(key, "attribute is empty in DataSet on line", ds.sourceline)
                         return False
                 for fcda in self.get_fcda_list_from_ds(ds):
@@ -494,6 +496,8 @@ class SclParser:
     # ========= 6 в RC Присутствуют обязательные параметры
     def is_all_attributes_in_rc_is_ok(self):
         req = ['bufTime', 'buffered', 'confRev', 'datSet', 'name']
+        req_of = ['configRef', 'dataSet', 'reasonCode', 'seqNum', 'timeStamp']
+        req_trg = ['dchg', 'period', 'qchg']
         for ld in self.get_ld_list_from_file():
             for rc in self.get_rc_list_from_ld(ld):
                 if not set(req) <= set(rc.keys()) :
@@ -501,11 +505,29 @@ class SclParser:
                     return False
                 for key in rc.keys():
                     if rc.get(key)=='':
+                        if key in ['desc']: #for LN0 and without prefix nodes
+                            continue
                         print(key, "attribute is empty in ReportControl on line", rc.sourceline, "from LDevice on line", ld.sourceline)
                         return False
+                for trg in rc.iterdescendants(tag='{*}TrgOps'):
+                    if not set(req_trg) <= set(trg.keys()) :
+                        print("Not enough attributes in TrgOps block on line", trg.sourceline, "from ReportControl on line", rc.sourceline, "from LDevice on line", ld.sourceline)
+                        return False
+                    for key in trg.keys():
+                        if trg.get(key)=='':
+                            print(key, "attribute is empty in TrgOps block on line", of.sourceline, "from ReportControl on line", rc.sourceline, "from LDevice on line", ld.sourceline)
+                            return False
+                for of in rc.iterdescendants(tag='{*}OptFields'):
+                    if not set(req_of) <= set(of.keys()) :
+                        print("Not enough attributes in OptFields block on line", of.sourceline, "from ReportControl on line", rc.sourceline, "from LDevice on line", ld.sourceline)
+                        return False
+                    for key in of.keys():
+                        if of.get(key)=='':
+                            print(key, "attribute is empty in OptFields block on line", of.sourceline, "from ReportControl on line", rc.sourceline, "from LDevice on line", ld.sourceline)
+                            return False
         return True
 
-    # ========= 7 в RC Присутствуют ссылки на имеющиеся dset
+    # ========= 7 в RC Присутствуют ссылки на dset
     def is_all_report_control_linked(self):
         for ld in self.get_ld_list_from_file():
             for rc in self.get_rc_list_from_ld(ld):
@@ -609,13 +631,54 @@ class SclParser:
     def is_rc_names_correct_in_server(self, ied_ld_name, clt):
         ied = self.get_ied_by_iedld_name(ied_ld_name)
         for ld in self.__get_ld_list_from_ied(ied):
-            rc_names_from_server = clt.get_rc_list_by_ldname(ied.get('name')+ld.get('inst'))
+            rcbr_names_from_server = clt.get_rcbr_list_by_ldname(ied.get('name')+ld.get('inst'))
+            rcrp_names_from_server = clt.get_rcrp_list_by_ldname(ied.get('name')+ld.get('inst'))
+            rcnames_from_server = rcbr_names_from_server + rcrp_names_from_server
             for rcontrol in self.get_rc_list_from_ld(ld):
                 rc_names_from_file = self.get_rcname_list_from_rc(rcontrol)
                 for rcname in rc_names_from_file:
-                    if not rcname in rc_names_from_server:
+                    if not rcname in rcnames_from_server:
                         print("ReportControl", rcname, "from line", rcontrol.sourceline, "not in",ied.get('name')+ld.get('inst'),"from Server")
                         return False
+        return True
+
+    def get_rc_dict(self, reportcontrol):
+        res_dict = {}
+        res_dict['buffered'] = bool(reportcontrol.get('buffered')=='true')
+        res_dict['bufTime'] = reportcontrol.get('bufTime')
+        res_dict['confRev'] = reportcontrol.get('confRev')
+        res_dict['rptID'] = reportcontrol.get('name')
+        if hasattr(reportcontrol, 'TrgOps'):
+            res_dict['dchg'] = bool(reportcontrol.TrgOps.get('dchg') == 'true')
+            res_dict['qchg'] = bool(reportcontrol.TrgOps.get('qchg') == 'true')
+            if reportcontrol.TrgOps.get('dupd'):
+                res_dict['dupd'] = bool(reportcontrol.TrgOps.get('dupd') == 'true')
+            res_dict['period'] = bool(reportcontrol.TrgOps.get('period') == 'true')
+        if hasattr(reportcontrol, 'OptFields'):
+            res_dict['seqNum'] = bool(reportcontrol.OptFields.get('seqNum') == 'true')
+            res_dict['timeStamp'] = bool(reportcontrol.OptFields.get('timeStamp') == 'true')
+            res_dict['reasonCode'] = bool(reportcontrol.OptFields.get('reasonCode') == 'true')
+            res_dict['dataSet'] = bool(reportcontrol.OptFields.get('dataSet') == 'true')
+            res_dict['dataRef'] = bool(reportcontrol.OptFields.get('dataRef') == 'true')
+        return res_dict
+
+    def test_rc_attributes_ok_in_server(self, ied_ld_name, clt):
+        ied = self.get_ied_by_iedld_name(ied_ld_name)
+        for ld in self.__get_ld_list_from_ied(ied):
+            for rcontrol in self.get_rc_list_from_ld(ld):
+                rc_names_from_file = self.get_rcname_list_from_rc(rcontrol)
+                rc_dict_from_file = self.get_rc_dict(rcontrol)
+                for rc_name in rc_names_from_file:
+                    if rcontrol.get('buffered')=='true':
+                        rpt_name = ied.get('name')+ld.get('inst')+'/LLN0.BR.'+rc_name
+                    else:
+                        rpt_name = ied.get('name')+ld.get('inst')+'/LLN0.RP.'+rc_name
+                    rc_dict_from_server = clt.get_rcb_dictionary(rpt_name)
+                    for k in rc_dict_from_file:
+                        if not rc_dict_from_file[k] == rc_dict_from_server[k]:
+                            print("ReportControl attr:", k, "from RCB", rpt_name, "from line", rcontrol.sourceline, "not equal with same attribute in", ied_ld_name,"instance from Server")
+                            print(type(rc_dict_from_file[k]), "Ouch", k, type(rc_dict_from_server[k]))
+                            return False
         return True
 
 
