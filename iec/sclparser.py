@@ -173,11 +173,11 @@ class SclParser:
     #gets a bold - like lnode name from server and return lnType from file
     def get_lntype_by_full_ln_name(self, ldevice, full_lnname):
         for lnode in self.__get_ln_list_from_ld(ldevice):
-            if full_lnname == self.__get_ln_name_inst(lnode):
+            if full_lnname == self.get_ln_name_inst(lnode):
                 return lnode.get('lnType')
 
     #Lnode full name with instance number
-    def __get_ln_name_inst(self, lnode):
+    def get_ln_name_inst(self, lnode):
         if 'prefix' in lnode.attrib:
             if(lnode.get('prefix')):
                 return (lnode.get('prefix')+lnode.get('lnClass')+lnode.get('inst'))
@@ -190,7 +190,7 @@ class SclParser:
     def __get_ln_name_inst_list_from_ld(self, ldevice):
         res_list = []
         for lnode in self.__get_ln_list_from_ld(ldevice):
-            res_list.append(self.__get_ln_name_inst(lnode))
+            res_list.append(self.get_ln_name_inst(lnode))
         return res_list
 
 
@@ -234,6 +234,23 @@ class SclParser:
             res_list.append(enum)
         return res_list
 
+    def get_all_typelist_from_file(self):
+        res_list = []
+        for lntype in self.__ddt.LNodeType:
+            res_list.append(lntype)
+        for do_type in self.__ddt.DOType:
+            res_list.append(do_type)
+        for da_type in self.__ddt.DAType:
+            res_list.append(da_type)
+        for enum in self.__ddt.EnumType:
+            res_list.append(enum)
+        return res_list
+
+    def get_datatype_by_id(self, typid):
+        gen = (datatype for datatype in self.get_all_typelist_from_file() if datatype.get('id')==typid)
+        for datatype in gen:
+            return datatype
+
     def get_dotype_by_id(self, dotypeid):
         gen = (dotype for dotype in self.get_dotype_list_from_file() if dotype.get('id')==dotypeid)
         for do_type in gen:
@@ -269,7 +286,7 @@ class SclParser:
                 do_list.append(do.get('name'))
         return do_list
 
-    def get_do_list_from_lntype(self, lnodetype):
+    def get_do_name_list_from_lntype(self, lnodetype):
         do_list = []
         for do in lnodetype.iterchildren():
             do_list.append(do.get('name'))
@@ -279,6 +296,12 @@ class SclParser:
         do_list = []
         for do in lnodetype.iterchildren():
             do_list.append(do.get('type'))
+        return do_list
+
+    def get_do_list_from_lntype(self, lnodetype):
+        do_list = []
+        for do in lnodetype.iterchildren():
+            do_list.append(do)
         return do_list
 
 
@@ -345,6 +368,22 @@ class SclParser:
         gen = (dotype for dotype in lnodetype.iterchildren() if dotype.get('name')==doi_name)
         for do in gen:
             return self.get_dotype_by_id(do.get('type'))
+
+    def get_sdolist_from_dotype(self, dotype):
+        sdo_list=[]
+        for sdo in dotype.iterdescendants(tag='{*}SDO'):
+            sdo_list.append(sdo)
+        return sdo_list
+
+    def get_dalist_from_dotype(self, dotype):
+        do_list=[]
+        for do in dotype.iterdescendants(tag='{*}DA'):
+            do_list.append(do)
+        return do_list
+
+
+
+
     # ========= 0 предварительная проверка LNodeTypes
     def is_lnode_types_ok(self):
         req_ln = ['id', 'lnClass']
@@ -552,7 +591,7 @@ class SclParser:
             for ld in self.__get_ld_list_from_ied(ied):
                 for ln in self.__get_ln_list_from_ld(ld):
                     lnodetype = self.get_lntype_by_id(ln.get('lnType'))
-                    dotype_list = self.get_do_list_from_lntype(lnodetype)
+                    dotype_list = self.get_do_name_list_from_lntype(lnodetype)
                     for doi in self.__get_doi_list_from_ln(ln):
                         dotype = self.get_dotype_from_lntype_by_name(lnodetype, doi.get('name'))
                         if not doi.get('name') in dotype_list:
@@ -572,7 +611,7 @@ class SclParser:
             for ld in self.__get_ld_list_from_ied(ied):
                 for ln in self.__get_ln_list_from_ld(ld):
                     lntype = self.get_lntype_by_id(ln.get('lnType'))
-                    do_list = self.get_do_list_from_lntype(lntype)
+                    do_list = self.get_do_name_list_from_lntype(lntype)
                     for doi in self.__get_doi_list_from_ln(ln):
                         if not doi.get('name'):
                             print("DOI does not have a NAME attribute on line", doi.sourceline, " from LN ", ln.get('lnType'))
@@ -639,6 +678,7 @@ class SclParser:
                 for rcname in rc_names_from_file:
                     if not rcname in rcnames_from_server:
                         print("ReportControl", rcname, "from line", rcontrol.sourceline, "not in",ied.get('name')+ld.get('inst'),"from Server")
+                        clt.stop()
                         return False
         return True
 
@@ -647,7 +687,16 @@ class SclParser:
         res_dict['buffered'] = bool(reportcontrol.get('buffered')=='true')
         res_dict['bufTime'] = reportcontrol.get('bufTime')
         res_dict['confRev'] = reportcontrol.get('confRev')
-        res_dict['rptID'] = reportcontrol.get('name')
+        if not reportcontrol.get('rptID'):
+            rc_names_from_file = self.get_rcname_list_from_rc(reportcontrol)
+            for rc_name in rc_names_from_file:
+                ldev_parent = reportcontrol.iterancestors(tag='{*}LDevice')
+                ied_parent = reportcontrol.iterancestors(tag='{*}IED')
+                for ied in ied_parent:
+                    for ldev in ldev_parent:
+                        res_dict['rptID'] = ied.get('name')+ldev.get('inst')+'/LLN0$BR$'+rc_name
+        else:
+            res_dict['rptID'] = reportcontrol.get('rptID')
         if hasattr(reportcontrol, 'TrgOps'):
             res_dict['dchg'] = bool(reportcontrol.TrgOps.get('dchg') == 'true')
             res_dict['qchg'] = bool(reportcontrol.TrgOps.get('qchg') == 'true')
@@ -677,11 +726,109 @@ class SclParser:
                     for k in rc_dict_from_file:
                         if not rc_dict_from_file[k] == rc_dict_from_server[k]:
                             print("ReportControl attr:", k, "from RCB", rpt_name, "from line", rcontrol.sourceline, "not equal with same attribute in", ied_ld_name,"instance from Server")
+                            print(rc_dict_from_file[k], "Ouch", k, rc_dict_from_server[k])
                             print(type(rc_dict_from_file[k]), "Ouch", k, type(rc_dict_from_server[k]))
                             return False
         return True
 
 
+    def var_fc_builder(self, dotype, name='', tempd={}, fc=''):
+        temp_dict = tempd
+        fc_name=fc
+        for da in dotype.iterchildren():
+            if(da.get('fc')):
+                fc_name = da.get('fc')
+            if not da.get('type') or (da.get('type') and da.get('bType')=='Enum'):
+                temp_dict[name+'.'+da.get('name')]=fc_name
+                #temp_dict.append(name+'.'+da.get('name')+'['+da.get('bType')+']'+'+++++++++++++++++++'+fc_name)
+                #print('\t\t\t', name+'.'+da.get('name')+'['+da.get('bType')+']' , da.sourceline)
+            else:
+                self.var_fc_builder(self.get_datatype_by_id(da.get('type')), name+'.'+da.get('name'), temp_dict, fc_name)
+        return temp_dict
+
+    def convert_btype_name(self, btype):
+        if btype in ['FLOAT32']:
+            return 'float'
+        if btype == 'Struct':
+            return 'structure'
+        if btype == 'BOOLEAN':
+            return 'boolean'
+        if btype in ['Enum', 'INT32', 'INT128']:
+            return 'integer'
+        if btype == 'Timestamp':
+            return 'utc-time'
+        if btype == 'VisString255':
+            return 'visible-string'
+        if btype in ['INT32U', 'INT8U']:
+            return 'unsigned'
+        if btype in ['Octet64']:
+            return 'octet-string'
+        if btype in ['Check', 'Quality', 'Dbpos']:
+            return 'bit-string'
+        else:
+            return '------------------------------------------------'
+
+    def var_btype_builder(self, dotype, name='', tempd={}, bt=''):
+        temp_dict = tempd
+        btype_name=bt
+        for da in dotype.iterchildren():
+            if(da.get('bType')):
+                btype_name = da.get('bType')
+            if not da.get('type') or (da.get('type') and da.get('bType')=='Enum'):
+                temp_dict[name+'.'+da.get('name')]=self.convert_btype_name(btype_name)
+                #temp_dict.append(name+'.'+da.get('name')+'['+da.get('bType')+']'+'+++++++++++++++++++'+fc_name)
+                #print('\t\t\t', name+'.'+da.get('name')+'['+da.get('bType')+']' , da.sourceline)
+            else:
+                self.var_btype_builder(self.get_datatype_by_id(da.get('type')), name+'.'+da.get('name'), temp_dict, btype_name)
+        return temp_dict
+
+
+    def test_lnode_fc_parameters_is_ok(self, ied_ld_name, clt):
+        ied = self.get_ied_by_iedld_name(ied_ld_name)
+        for ld in self.__get_ld_list_from_ied(ied):
+            #print(ld.get('inst'))
+            for ln in self.__get_ln_list_from_ld(ld=ld):
+                lntype = self.get_lntype_by_id(ln.get('lnType'))
+                lninst = ied.get('name')+ld.get('inst')+'/'+self.get_ln_name_inst(ln)
+                #print('\t'+lntype.get('id'))
+                var_list_from_node = {}
+                for do in self.get_do_list_from_lntype(lntype):
+                    dotype = self.__get_dotypeobj_by_id(do.get('type'))
+                    var_list_from_node.update(self.var_fc_builder(dotype=dotype, name=lninst+'.'+do.get('name'), tempd={}))
+                var_list_from_server = clt.get_varlist_fc_by_ld_lnname(lninst)
+                for k in var_list_from_node:
+                    try:
+                        if not var_list_from_node[k] == var_list_from_server[k]:
+                            print('FC not equal in', k, 'variable')
+                            return False
+                    except KeyError as e:
+                        print('Variable not in a Server: ', str(e) )
+                        return False
+        return True
+
+
+    def test_lnode_btype_parameters_is_ok(self, ied_ld_name, clt):
+        ied = self.get_ied_by_iedld_name(ied_ld_name)
+        for ld in self.__get_ld_list_from_ied(ied):
+            #print(ld.get('inst'))
+            for ln in self.__get_ln_list_from_ld(ld=ld):
+                lntype = self.get_lntype_by_id(ln.get('lnType'))
+                lninst = ied.get('name')+ld.get('inst')+'/'+self.get_ln_name_inst(ln)
+                #print('\t'+lntype.get('id'))
+                var_list_from_node = {}
+                for do in self.get_do_list_from_lntype(lntype):
+                    dotype = self.__get_dotypeobj_by_id(do.get('type'))
+                    var_list_from_node.update(self.var_btype_builder(dotype=dotype, name=lninst+'.'+do.get('name'), tempd={}))
+                var_list_from_server = clt.get_varlist_bytype_by_ld_lnname(lninst)
+                for k in var_list_from_node:
+                    try:
+                        if not var_list_from_node[k] == var_list_from_server[k]:
+                            print('bType not equal in', k, 'variable')
+                            return False
+                    except KeyError as e:
+                        print('Variable not in a Server: ', str(e) )
+                        return False
+        return True
 
 '''
 #############################################################################
@@ -695,7 +842,7 @@ if __name__ == "__main__":
         print("*"*100)
         for i in ls:
             scl=SclParser(i)
-            scl.test_ex()
+            scl.get_datatype_elements()
             print("*"*100)
     except Exception as e:
         print('Exception: ', str(e) )

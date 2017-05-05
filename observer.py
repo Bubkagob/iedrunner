@@ -43,32 +43,40 @@ def observer():
                 iIndex = 1
                 while dobject:
                     DOI_name = iec61850.toCharP(dobject.data)
-                    #print(DOI_name, "-----OBJ------>" , iIndex)
+                    print(DOI_name, "-----OBJ------>" , iIndex)
                     #dataAttribute = iec61850.toDataAttribute(dobject)
                     #dafc = iec61850.toCharP(dataAttribute.fc)
                     #print(dafc, "-----DA_FC------>" , iIndex)
                     [datalist, error] = iec61850.IedConnection_getDataDirectory(con, LD_name+'/'+LN_name+'.'+DOI_name)
+                    [datafclist, error] = iec61850.IedConnection_getDataDirectoryFC(con, LD_name+'/'+LN_name+'.'+DOI_name)
+                    print(LD_name+'/'+LN_name+'.'+DOI_name)
                     data = iec61850.LinkedList_get(datalist, 0)
+                    datafc = iec61850.LinkedList_get(datafclist, 0)
                     dIndex = 1
                     while data:
                         DAname = iec61850.toCharP(data.data)
-                        #print(DAname, "-----DATA------>" , dIndex)
+                        DAFCname = iec61850.toCharP(datafc.data)
+                        var_name = DAFCname.split("[", 1)[0]
+                        fc_name = DAFCname.split("[", 1)[1].split("]", 1)[0]
+                        print(DAname, "-----DATA------>" , dIndex)
+                        print(DAFCname, "<-----DATA ---- FC------>" , fc_name, var_name, dIndex)
                         data = iec61850.LinkedList_get(datalist, dIndex)
+                        datafc = iec61850.LinkedList_get(datafclist, dIndex)
                         #varspec = iec61850.IedConnection_getVariableSpecification(con, LD_name+'/'+LN_name+'.'+DOI_name+'.'+DAname, iec61850.IEC61850_FC_ST)
                         #state = iec61850.MmsValue_getTypeString(varspec)
                         #print(state, "-----SPEC------>" , dIndex)
                         dIndex += 1
                     [datafclist, error] = iec61850.IedConnection_getDataDirectoryFC(con, LD_name+'/'+LN_name+'.'+DOI_name)
                     #iec61850.LinkedList_printStringList(datafclist)
-                    datafc = iec61850.LinkedList_get(datafclist, 0)
-                    dfcIndex = 1
-                    while datafc:
-                        DAname = iec61850.toCharP(datafc.data)
-                        var_name = DAname.split("[", 1)[0]
-                        st_name = DAname.split("[", 1)[1].split("]", 1)[0]
-                        #print(DAname, "<-----DATA ---- FC------>" , st_name, var_name, dfcIndex)
-                        datafc = iec61850.LinkedList_get(datafclist, dfcIndex)
-                        dfcIndex += 1
+                    # datafc = iec61850.LinkedList_get(datafclist, 0)
+                    # dfcIndex = 1
+                    # while datafc:
+                    #     DAname = iec61850.toCharP(datafc.data)
+                    #     var_name = DAname.split("[", 1)[0]
+                    #     st_name = DAname.split("[", 1)[1].split("]", 1)[0]
+                    #     print(DAname, "<-----DATA ---- FC------>" , st_name, var_name, dfcIndex)
+                    #     datafc = iec61850.LinkedList_get(datafclist, dfcIndex)
+                    #     dfcIndex += 1
                     dobject = iec61850.LinkedList_get(dataObjects, iIndex)
                     iIndex += 1
                 #Working with Data Sets

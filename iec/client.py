@@ -14,6 +14,8 @@ class IecClient():
             self.__error = iec61850.IedConnection_connect(self.__con, ip, tcpPort)
             if (self.__error == iec61850.IED_ERROR_OK):
                 running = 1
+            else:
+                print("ошибка",self.__error)
         except Exception as e:
             print('Connection exception: ', str(e))
             running = 0
@@ -83,6 +85,81 @@ class IecClient():
             lnode = iec61850.LinkedList_getNext(lnode)
         iec61850.LinkedList_destroy(logicalNodes)
         return ln_names
+
+    def get_varlist_fc_by_ld_lnname(self, iedldlnname):
+        var_dict = {}
+        [variables, self.__error] = iec61850.IedConnection_getLogicalNodeVariables(self.__con, iedldlnname)
+        variable = iec61850.LinkedList_get(variables, 0)
+        vIndex = 1
+        while variable:
+            name = iec61850.toCharP(variable.data)
+            fc_name = name.split("$", 1)[0]
+            if '$' in name:
+                var_name = name.split("$",1)[1]
+                var_name = var_name.replace("$", ".")
+                #print(fc_name, "-----FC------>" , vIndex)
+                var_dict[iedldlnname+'.'+var_name]=fc_name
+            variable = iec61850.LinkedList_get(variables, vIndex)
+            vIndex += 1
+        iec61850.LinkedList_destroy(variables)
+        return var_dict
+
+    def get_IEC61850_FC_by_fc(self, fcname):
+        if fcname == 'ST':
+            return iec61850.IEC61850_FC_ST
+        if fcname == 'MX':
+            return iec61850.IEC61850_FC_MX
+        if fcname == 'SP':
+            return iec61850.IEC61850_FC_SP
+        if fcname == 'SV':
+            return iec61850.IEC61850_FC_SV
+        if fcname == 'CF':
+            return iec61850.IEC61850_FC_CF
+        if fcname == 'DC':
+            return iec61850.IEC61850_FC_DC
+        if fcname == 'SG':
+            return iec61850.IEC61850_FC_SG
+        if fcname == 'SE':
+            return iec61850.IEC61850_FC_SE
+        if fcname == 'SR':
+            return iec61850.IEC61850_FC_SR
+        if fcname == 'OR':
+            return iec61850.IEC61850_FC_OR
+        if fcname == 'BL':
+            return iec61850.IEC61850_FC_BL
+        if fcname == 'EX':
+            return iec61850.IEC61850_FC_EX
+        if fcname == 'CO':
+            return iec61850.IEC61850_FC_CO
+        if fcname == 'US':
+            return iec61850.IEC61850_FC_US
+        if fcname == 'MS':
+            return iec61850.IEC61850_FC_MS
+        if fcname == 'RP':
+            return iec61850.IEC61850_FC_RP
+        if fcname == 'BR':
+            return iec61850.IEC61850_FC_BR
+        if fcname == 'LG':
+            return iec61850.IEC61850_FC_LG
+        else:
+            print('FC name not in Library')
+
+
+
+
+    def get_vartype_by_fc(self, varname, fc):
+        [obj, self._error] = iec61850.IedConnection_readObject(self.__con, varname, self.get_IEC61850_FC_by_fc(fc))
+        objtype = iec61850.MmsValue_getTypeString(obj)
+        iec61850.MmsValue_delete(obj)
+        return objtype
+
+    def get_varlist_bytype_by_ld_lnname(self, iedldlnname):
+        var_dict = {}
+        var_dict_fc = self.get_varlist_fc_by_ld_lnname(iedldlnname)
+        for variable in var_dict_fc:
+            var_dict[variable]=self.get_vartype_by_fc(variable, var_dict_fc[variable])
+        return var_dict
+
 
     def get_rcbr_list_by_ldname(self, ldname):
         rc_names = []
@@ -188,14 +265,28 @@ class IecClient():
 
     def readInt32(self, var):
         [intValue, self.__error] = iec61850.IedConnection_readFloatValue(self.__con, var, iec61850.IEC61850_FC_MX)
-        print("int8-32 Value:            ", intValue)
+        print('int8-32 Value:\t\t', intValue)
+        [f, self.__error] = iec61850.IedConnection_readObject(self.__con, var, iec61850.IEC61850_FC_MX)
+        print("F_Type:\t\t\t", iec61850.MmsValue_getTypeString(f))
+
+    def read_uint32(self, var):
+        [intValue, self.__error] = iec61850.IedConnection_readUnsigned32Value(self.__con, var, iec61850.IEC61850_FC_MX)
+        print('uint8-32 Value:\t\t', intValue)
+        [f, self.__error] = iec61850.IedConnection_readObject(self.__con, var, iec61850.IEC61850_FC_MX)
+        print("F_Type:\t\t\t", iec61850.MmsValue_getTypeString(f))
+
+    def read_st(self, var):
+        [stValue, self.__error] = iec61850.IedConnection_readUnsigned32Value(self.__con, var, iec61850.IEC61850_FC_ST)
+        print('stVal Value:\t\t', stValue)
+        [st, self.__error] = iec61850.IedConnection_readObject(self.__con, var, iec61850.IEC61850_FC_ST)
+        print("STVal_Type:\t\t", iec61850.MmsValue_getTypeString(st))
 
     def readTimeStamp(self, var, type=iec61850.IEC61850_FC_MX):
         time = iec61850.Timestamp()
         [timeStampValue, self.__error] = iec61850.IedConnection_readTimestampValue(self.__con, var, var, time)
         return iec61850.Timestamp_getTimeInMs(time)
 
-    def readInt32(self, var):
+    def getInt32(self, var):
         [intValue, self.__error] = iec61850.IedConnection_readFloatValue(self.__con, var, iec61850.IEC61850_FC_MX)
         return intValue
 
@@ -237,8 +328,8 @@ class IecClient():
             rcb_dict['buffered'] = iec61850.ClientReportControlBlock_isBuffered(self.__rcb)
             rcb_dict['bufTime'] = str(iec61850.ClientReportControlBlock_getBufTm(self.__rcb))
             rcb_dict['confRev'] = str(iec61850.ClientReportControlBlock_getConfRev(self.__rcb))
-            #rcb_dict['datSet'] = iec61850.ClientReportControlBlock_getDataSetReference(self.__rcb)
-            #rcb_dict['CBref'] = iec61850.ClientReportControlBlock_getObjectReference(self.__rcb)
+            rcb_dict['datSet'] = iec61850.ClientReportControlBlock_getDataSetReference(self.__rcb)
+            rcb_dict['CBref'] = iec61850.ClientReportControlBlock_getObjectReference(self.__rcb)
             rcb_dict['rptID'] = iec61850.ClientReportControlBlock_getRptId(self.__rcb)
             rcb_dict['trgOpt'] = format(iec61850.ClientReportControlBlock_getTrgOps(self.__rcb), '04b')
             rcb_dict['OptFields'] = format(iec61850.ClientReportControlBlock_getOptFlds(self.__rcb), '05b')
@@ -301,20 +392,79 @@ class IecClient():
         iec61850.ClientReportControlBlock_setGI(self.__rcb, False)
         iec61850.IedConnection_setRCBValues(self.__con, self.__rcb, iec61850.RCB_ELEMENT_GI, False)
 
+    def read_object_test(self):
+        [stVal, error] = iec61850.IedConnection_readObject(self.__con, "ECISepam80_8/CSWI1.Loc.stVal", iec61850.IEC61850_FC_ST)
+        [hz, error] = iec61850.IedConnection_readObject(self.__con, "ECISepam80_8/MMXU1.Hz.mag", iec61850.IEC61850_FC_MX)
+        [quality, error] = iec61850.IedConnection_readObject(self.__con, "ECISepam80_8/MMXU1.Hz.q", iec61850.IEC61850_FC_MX)
+        [timeStampValue, error] = iec61850.IedConnection_readObject(self.__con, "ECISepam80_8/MMXU1.Hz.t", iec61850.IEC61850_FC_MX)
+        [db, error] = iec61850.IedConnection_readObject(self.__con, "ECISepam80_8/MMXU1.Hz.db", iec61850.IEC61850_FC_CF)
+        state = iec61850.MmsValue_getBoolean(stVal)
+        type_string = iec61850.MmsValue_getTypeString(stVal)
+        hz_type = iec61850.MmsValue_getTypeString(hz)
+        quality_type = iec61850.MmsValue_getTypeString(quality)
+        time_type = iec61850.MmsValue_getTypeString(timeStampValue)
+        db_type = iec61850.MmsValue_getTypeString(db)
+        iec61850.MmsValue_delete(stVal)
+        print("StVal:\t\t", state)
+        print("TypeStval:\t", type_string)
+        print("MagVal_Type:\t\t", hz_type)
+        print("Quality_Type:\t\t", quality_type)
+        print("TimeStamp_Type:\t\t", time_type)
+        print("DB_Type:\t\t", db_type)
+        # =============================
+        [mag, error] = iec61850.IedConnection_readObject(self.__con, "ECISepam20_7/MSTA1.TrAmp3.mag", iec61850.IEC61850_FC_MX)
+        print("Mag_Type:\t\t", iec61850.MmsValue_getTypeString(mag))
+        [f, error] = iec61850.IedConnection_readObject(self.__con, "ECISepam20_7/MSTA1.TrAmp3.mag.f", iec61850.IEC61850_FC_MX)
+        print("F_Type:\t\t\t", iec61850.MmsValue_getTypeString(f))
+        [q, error] = iec61850.IedConnection_readObject(self.__con, "ECISepam20_7/MSTA1.TrAmp3.q", iec61850.IEC61850_FC_MX)
+        print("q_Type:\t\t\t", iec61850.MmsValue_getTypeString(q))
+        [Timestamp, error] = iec61850.IedConnection_readObject(self.__con, "ECISepam20_7/MSTA1.TrAmp3.t", iec61850.IEC61850_FC_MX)
+        print("F_Type:\t\t\t", iec61850.MmsValue_getTypeString(Timestamp))
+        [db, error] = iec61850.IedConnection_readObject(self.__con, "ECISepam20_7/MSTA1.TrAmp3.db", iec61850.IEC61850_FC_CF)
+        print("db_Type:\t\t", iec61850.MmsValue_getTypeString(db))
+        [dataNs, error] = iec61850.IedConnection_readObject(self.__con, "ECISepam20_7/MSTA1.TrAmp3", iec61850.IEC61850_FC_EX)
+        print("dataNs_Type:\t\t", iec61850.MmsValue_getTypeString(dataNs))
+        [enum, error] = iec61850.IedConnection_readObject(self.__con, "ECISepam20_7/A49_PTTR1.Mod.stVal", iec61850.IEC61850_FC_ST)
+        print("enum Type:\t\t", iec61850.MmsValue_getTypeString(enum))
+        [string, error] = iec61850.IedConnection_readObject(self.__con, "ECISepam20_7/A49T_PTTR6.NamPlt.d", iec61850.IEC61850_FC_DC)
+        print("string Type:\t\t", iec61850.MmsValue_getTypeString(string))
+        [float_var, error] = iec61850.IedConnection_readObject(self.__con, "ECISepam20_7/A49T_PTTR8.Tmp.mag.f", iec61850.IEC61850_FC_MX)
+        print("float Type:\t\t", iec61850.MmsValue_getTypeString(float_var))
+        [int_var, error] = iec61850.IedConnection_readObject(self.__con, "ECISepam20_7/XCBR1.ChaTms.stVal", iec61850.IEC61850_FC_ST)
+        print("int signed Type:\t\t", iec61850.MmsValue_getTypeString(int_var))
+        [uint_var, error] = iec61850.IedConnection_readObject(self.__con, "ECISepam20_7/A49T_PTTR7.Tmp.db", iec61850.IEC61850_FC_CF)
+        print("Usigned Type:\t\t", iec61850.MmsValue_getTypeString(uint_var))
+        [octet, error] = iec61850.IedConnection_readObject(self.__con, "ECISepam40_5/RREC1.BlkRec.Oper.origin.orIdent", iec61850.IEC61850_FC_CO)
+        print("octet Type:\t\t", iec61850.MmsValue_getTypeString(octet))
+        [check, error] = iec61850.IedConnection_readObject(self.__con, "ECISepam80_8/A49_PTTR1.InhThmPro.Oper.Check", iec61850.IEC61850_FC_CO)
+        print("check Type:\t\t", iec61850.MmsValue_getTypeString(check))
+        [dbPos, error] = iec61850.IedConnection_readObject(self.__con, "ECISepam80_8/XCBR1.Pos.stVal", iec61850.IEC61850_FC_ST)
+        print("dbPos Type:\t\t", iec61850.MmsValue_getTypeString(dbPos))
+        [int128, error] = iec61850.IedConnection_readObject(self.__con, "ECISepam80_8/XCBR1.SumSwARs.actVal", iec61850.IEC61850_FC_ST)
+        print("int128 Type:\t\t", iec61850.MmsValue_getTypeString(int128))
+
+
+
+
+
 if __name__ == "__main__":
     try:
         clt=IecClient()
         #cltThread = threading.Thread(target = clt.run)
         #cltThread.start()
-        clt.get_model_from_server()
-        for ld in clt.get_ld_list():
-            print("Checkin===",clt.get_name_of(ld))
-            print("##########")
-            for rc in clt.get_rcbr_list_by_ldname(clt.get_name_of(ld)):
-                print("Working with RC buffered ---- > ", rc)
-            for rp in clt.get_rcrp_list_by_ldname(clt.get_name_of(ld)):
-                print("Working with RC Unbuffered ---- > ", rp)
-        clt.get_rcb_dictionary('RP3_46LD0/LLN0.BR.brcbST01')
+        #clt.get_model_from_server()
+        # for ld in clt.get_ld_list():
+        #     print("Checkin===",clt.get_name_of(ld))
+        #     print("##########")
+        #     for rc in clt.get_rcbr_list_by_ldname(clt.get_name_of(ld)):
+        #         print("Working with RC buffered ---- > ", rc)
+        #     for rp in clt.get_rcrp_list_by_ldname(clt.get_name_of(ld)):
+        #         print("Working with RC Unbuffered ---- > ", rp)
+        #print(clt.get_rcb_dictionary('ECISepam20_7/LLN0.BR.brcbMX01'))
+        clt.read_object_test()
+        #clt.readInt32('ECISepam20_7/MSTA1.TrAmp3.mag.f')
+        #clt.readST('ECISepam40_1/XCBR1.CBOpCap.stVal')
+        #print(clt.get_varlist_by_ld_lnname('ECISepam20_7/MSTA1'))
         clt.stop()
     except:
         running = 0

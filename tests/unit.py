@@ -1,6 +1,7 @@
 import sys
 import unittest
 import lxml
+import time
 from iec import client, sclparser
 
 
@@ -111,6 +112,13 @@ class IECTestCase(unittest.TestCase):
     def test_rcb_attributes(self):
         self.assertTrue(self.scl.test_rc_attributes_ok_in_server(self.__IEDLDNAME, self.clt))
 
+    @unittest.skipIf(not test_connection, "Reason: connection_test Failed")
+    def test_node_variable_fc(self):
+        self.assertTrue(self.scl.test_lnode_fc_parameters_is_ok(self.__IEDLDNAME, self.clt))
+
+    @unittest.skipIf(not test_connection, "Reason: connection_test Failed")
+    def test_node_variable_btype(self):
+        self.assertTrue(self.scl.test_lnode_btype_parameters_is_ok(self.__IEDLDNAME, self.clt))
 
 def run_all_tests(filename, ip, ied_ld_name):
     #test_suite for file tester
@@ -131,12 +139,15 @@ def run_all_tests(filename, ip, ied_ld_name):
     runnerSCL = unittest.TextTestRunner(verbosity=2)
     resultSCL = runnerSCL.run(suite)
     status_one = len(resultSCL.failures) + len(resultSCL.errors) + len(resultSCL.skipped)
+
     #test suite for client-server
     suiteIEC = unittest.TestSuite()
     suiteIEC.addTest(IECTestCase("test_connection", filename, ip, ied_ld_name))
     suiteIEC.addTest(IECTestCase("test_structure_check_in_server", filename, ip, ied_ld_name))
     suiteIEC.addTest(IECTestCase("test_rcb_instance_name", filename, ip, ied_ld_name))
     suiteIEC.addTest(IECTestCase("test_rcb_attributes", filename, ip, ied_ld_name))
+    suiteIEC.addTest(IECTestCase("test_node_variable_fc", filename, ip, ied_ld_name))
+    suiteIEC.addTest(IECTestCase("test_node_variable_btype", filename, ip, ied_ld_name))
     runnerIEC = unittest.TextTestRunner(verbosity=2)
     resultIEC = runnerIEC.run(suiteIEC)
     status_two = len(resultIEC.failures) + len(resultIEC.errors) + len(resultIEC.skipped)
