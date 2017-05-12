@@ -38,7 +38,7 @@ def line_requester(req):
 
 
 
-def sasClient(parser):
+def sas_client(parser):
     client = parser.parse_args().client
     connection = parser.parse_args().conn
     filename = parser.parse_args().file
@@ -84,7 +84,7 @@ def inputParse():
 if __name__ == '__main__':
     parser = inputParse()
     try:
-        sasClient(parser)
+        sas_client(parser)
         clt = client.IecClient()
         checker(parser, clt)
         clt.stop()

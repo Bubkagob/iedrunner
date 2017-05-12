@@ -1,4 +1,5 @@
 from lxml import etree, objectify
+import subprocess
 
 class SclParser:
     def __init__(self, scd_file):
@@ -768,6 +769,134 @@ class SclParser:
         else:
             return '------------------------------------------------'
 
+    def get_flow_max_var(self, btype):
+        max_int_8   = 127
+        max_uint8   = 255
+        max_uint_16 = 65535
+        max_int16   = 32767
+        max_uint32  = 4294967295
+        max_int32   = 2147483647
+        max_uint64  = 18446744073709551615
+        max_int64   = 9223372036854775807
+        max_float   = 123.456
+        max_time = 4294967295999
+        quality = 8191
+        if btype == 'INT16':
+            return 'int16 '+ str(max_int16)
+        if btype in ['INT32', 'Enum', 'Check', 'Dbpos']:
+            return 'int32 '+ str(max_int32)
+        if btype in ['INT8U', 'BOOLEAN']:
+            return 'uint8 '+ str(max_uint8)
+        if btype == 'INT16U':
+            return 'uint16 '+ str(max_uint_16)
+        if btype == 'INT32U':
+            return 'uint32 '+ str(max_uint32)
+        if btype in ['FLOAT32']:
+            return 'f32 '+ str(max_float)
+        if btype == 'Timestamp':
+            return 'uint64 '+ str(max_time)
+        if btype == 'Quality':
+            return 'uint16 '+ str(quality)
+
+    def get_flow_min_var(self, btype):
+        max_int_8   = -128
+        max_uint8   = 0
+        max_uint_16 = 0
+        max_int16   = -32768
+        max_uint32  = 0
+        max_int32   = -2147483648
+        max_uint64  = 0
+        max_int64   = -9223372036854775808
+        max_float   = -123.456
+        max_time = 0
+        quality = 0
+        if btype == 'INT16':
+            return 'int16 '+ str(max_int16)
+        if btype in ['INT32', 'Enum', 'Check', 'Dbpos']:
+            return 'int32 '+ str(max_int32)
+        if btype in ['INT8U', 'BOOLEAN']:
+            return 'uint8 '+ str(max_uint8)
+        if btype == 'INT16U':
+            return 'uint16 '+ str(max_uint_16)
+        if btype == 'INT32U':
+            return 'uint32 '+ str(max_uint32)
+        if btype in ['FLOAT32']:
+            return 'f32 '+ str(max_float)
+        if btype == 'Timestamp':
+            return 'uint64 '+ str(max_time)
+        if btype == 'Quality':
+            return 'uint16 '+ str(quality)
+
+    def get_flow_avg_var(self, btype):
+        max_int_8   = 100
+        max_uint8   = 111
+        max_uint_16 = 33333
+        max_int16   = 12345
+        max_uint32  = 2345678901
+        max_int32   = 1234567891
+        max_uint64  = 9223372036854775807
+        max_int64   = 4567891234567891234
+        max_float   = 23.456
+        max_time = 2142524142444
+        quality = 4040
+        if btype == 'INT16':
+            return 'int16 '+ str(max_int16)
+        if btype in ['INT32', 'Enum', 'Check', 'Dbpos']:
+            return 'int32 '+ str(max_int32)
+        if btype in ['INT8U', 'BOOLEAN']:
+            return 'uint8 '+ str(max_uint8)
+        if btype == 'INT16U':
+            return 'uint16 '+ str(max_uint_16)
+        if btype == 'INT32U':
+            return 'uint32 '+ str(max_uint32)
+        if btype in ['FLOAT32']:
+            return 'f32 '+ str(max_float)
+        if btype == 'Timestamp':
+            return 'uint64 '+ str(max_time)
+        if btype == 'Quality':
+            return 'uint16 '+ str(quality)
+
+
+
+    def var_type_maxvalue_builder(self, dotype, name='', tempd={}, bt=''):
+        temp_dict = tempd
+        btype_name=bt
+        for da in dotype.iterchildren():
+            if(da.get('bType')):
+                btype_name = self.get_flow_max_var(da.get('bType'))
+            if not da.get('type') or (da.get('type') and da.get('bType')=='Enum'):
+                if not btype_name == None:
+                    temp_dict[name+'.'+da.get('name')]=btype_name
+            else:
+                self.var_type_maxvalue_builder(self.get_datatype_by_id(da.get('type')), name+'.'+da.get('name'), temp_dict, btype_name)
+        return temp_dict
+
+    def var_type_minvalue_builder(self, dotype, name='', tempd={}, bt=''):
+        temp_dict = tempd
+        btype_name=bt
+        for da in dotype.iterchildren():
+            if(da.get('bType')):
+                btype_name = self.get_flow_min_var(da.get('bType'))
+            if not da.get('type') or (da.get('type') and da.get('bType')=='Enum'):
+                if not btype_name == None:
+                    temp_dict[name+'.'+da.get('name')]=btype_name
+            else:
+                self.var_type_minvalue_builder(self.get_datatype_by_id(da.get('type')), name+'.'+da.get('name'), temp_dict, btype_name)
+        return temp_dict
+
+    def var_type_avgvalue_builder(self, dotype, name='', tempd={}, bt=''):
+        temp_dict = tempd
+        btype_name=bt
+        for da in dotype.iterchildren():
+            if(da.get('bType')):
+                btype_name = self.get_flow_avg_var(da.get('bType'))
+            if not da.get('type') or (da.get('type') and da.get('bType')=='Enum'):
+                if not btype_name == None:
+                    temp_dict[name+'.'+da.get('name')]=btype_name
+            else:
+                self.var_type_avgvalue_builder(self.get_datatype_by_id(da.get('type')), name+'.'+da.get('name'), temp_dict, btype_name)
+        return temp_dict
+
     def var_btype_builder(self, dotype, name='', tempd={}, bt=''):
         temp_dict = tempd
         btype_name=bt
@@ -781,6 +910,7 @@ class SclParser:
             else:
                 self.var_btype_builder(self.get_datatype_by_id(da.get('type')), name+'.'+da.get('name'), temp_dict, btype_name)
         return temp_dict
+
 
 
     def test_lnode_fc_parameters_is_ok(self, ied_ld_name, clt):
@@ -810,11 +940,9 @@ class SclParser:
     def test_lnode_btype_parameters_is_ok(self, ied_ld_name, clt):
         ied = self.get_ied_by_iedld_name(ied_ld_name)
         for ld in self.__get_ld_list_from_ied(ied):
-            #print(ld.get('inst'))
             for ln in self.__get_ln_list_from_ld(ld=ld):
                 lntype = self.get_lntype_by_id(ln.get('lnType'))
                 lninst = ied.get('name')+ld.get('inst')+'/'+self.get_ln_name_inst(ln)
-                #print('\t'+lntype.get('id'))
                 var_list_from_node = {}
                 for do in self.get_do_list_from_lntype(lntype):
                     dotype = self.__get_dotypeobj_by_id(do.get('type'))
@@ -830,6 +958,99 @@ class SclParser:
                         return False
         return True
 
+# тест который создает файлы переменных, запускает shm клиента, потом сверяет
+    def checker(self, filename, clt):
+        print("-"*60)
+        vars_from_server = clt.get_var_dict_fc_by_ied()
+        print("Trying to check values...")
+        with open(filename) as f:
+            requests = [request.split() for request in f]
+            try:
+                gen = (request for request in requests if len(request) == 3)
+                for req in gen:
+                    self.line_requester(req, vars_from_server, clt)
+                print("Checking finished")
+                return True
+            except Exception as e:
+                print('!!!Exception!!!!!         Exception: ', str(e) )
+
+    def line_requester(self, req, server_dict, clt):
+        fc =  server_dict[req[0]]
+        if req[1] in ['f32', 'f64']:
+            server_val = clt.read_float(req[0], fc)
+            if not (float(req[2]) == server_val):
+                print("ReadFloat_32_64 trouble   -   -   ->",req[0],req[2] , server_val)
+        if req[1] in ['int16', 'int32']:
+            server_val = clt.read_int32(req[0], fc)
+            if not (int(req[2]) == server_val):
+                print("ReadInt32_16 trouble   -   -   ->",req[0],req[2] , server_val)
+        if req[1] in ['uint32', 'uint16', 'uint8']:
+            server_val = clt.read_uint32(req[0], fc)
+            if not (int(req[2]) == server_val):
+                print("Read_UInt32_16_8 trouble   -   -   ->",req[0],req[2] , server_val)
+        if req[1] in ['uint64']:
+            server_val = clt.read_timestamp(req[0], fc)
+            if not (int(req[2]) == server_val):
+                print("Read TimeStamp trouble   -   -   ->",req[0],req[2] , server_val)
+        if req[0][-1:]=='q' and req[1] in ['uint16']:
+            server_val = clt.read_quality(req[0], fc)
+            if not (int(req[2]) == server_val):
+                print("Read Quality trouble  -   -   ->",req[0],req[2] , server_val)
+
+    def sas_client(self, filename):
+        client = '/home/ivan/Projects/sas/rattlehead/build/test/tools/test-client'
+        connection = 'conn1'
+        timeout = str(1)
+        cmd = client+' --connection='+connection+' --file='+filename+' --timeout='+timeout +' > /dev/null'
+        proc = subprocess.run(cmd, shell = True)
+
+
+    def test_var_storm(self, ied_ld_name, clt):
+        ied = self.get_ied_by_iedld_name(ied_ld_name)
+        var_max_list = {}
+        var_min_list = {}
+        var_avg_list = {}
+        for ld in self.__get_ld_list_from_ied(ied):
+            for ln in self.__get_ln_list_from_ld(ld=ld):
+                lntype = self.get_lntype_by_id(ln.get('lnType'))
+                lninst = ied.get('name')+ld.get('inst')+'/'+self.get_ln_name_inst(ln)
+                for do in self.get_do_list_from_lntype(lntype):
+                    dotype = self.__get_dotypeobj_by_id(do.get('type'))
+                    var_max_list.update(self.var_type_maxvalue_builder(dotype=dotype, name=lninst+'.'+do.get('name'), tempd={}))
+                    var_min_list.update(self.var_type_minvalue_builder(dotype=dotype, name=lninst+'.'+do.get('name'), tempd={}))
+                    var_avg_list.update(self.var_type_avgvalue_builder(dotype=dotype, name=lninst+'.'+do.get('name'), tempd={}))
+                f = open(ied_ld_name+'_max.txt', 'w')
+                for k, v in var_max_list.items():
+                    f.write(k+' '+v+'\n')
+                f.close()
+                f = open(ied_ld_name+'_min.txt', 'w')
+                for k, v in var_min_list.items():
+                    f.write(k+' '+v+'\n')
+                f.close()
+                f = open(ied_ld_name+'_avg.txt', 'w')
+                for k, v in var_avg_list.items():
+                    f.write(k+' '+v+'\n')
+                f.close()
+        for flow_file in [ied_ld_name+'_max.txt', ied_ld_name+'_min.txt', ied_ld_name+'_avg.txt']:
+            self.sas_client(flow_file)
+            self.checker(flow_file, clt)
+        return True
+
+
+    def get_vars_fc(self):
+        for ied in self.get_ied_list():
+            var_max_list = {}
+            for ld in self.__get_ld_list_from_ied(ied):
+                for ln in self.__get_ln_list_from_ld(ld=ld):
+                    lntype = self.get_lntype_by_id(ln.get('lnType'))
+                    lninst = ied.get('name')+ld.get('inst')+'/'+self.get_ln_name_inst(ln)
+                    for do in self.get_do_list_from_lntype(lntype):
+                        dotype = self.__get_dotypeobj_by_id(do.get('type'))
+                        var_max_list.update(self.var_type_maxvalue_builder(dotype=dotype, name=lninst+'.'+do.get('name'), tempd={}))
+                    for k, v in var_max_list.items():
+                        print(k, v)
+
+
 '''
 #############################################################################
 '''
@@ -838,11 +1059,13 @@ if __name__ == "__main__":
     try:
         ip = "192.168.137.34"
         full_ld = "ECIECI"
-        ls = ["ECI.scd", "SCD.scd", "B20.icd" ]
+        #ls = ["ECI.scd", "SCD.scd", "B20.icd" ]
+        ls = ["ECI.scd" ]
         print("*"*100)
         for i in ls:
             scl=SclParser(i)
-            scl.get_datatype_elements()
+            scl.get_vars_fc()
+
             print("*"*100)
     except Exception as e:
         print('Exception: ', str(e) )
