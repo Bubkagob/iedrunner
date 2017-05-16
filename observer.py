@@ -97,11 +97,11 @@ def observer():
                         print("Dataset: %s(not deletable)" %DS_name)
                     dataSetMemberRef = iec61850.LinkedList_getNext(dataSetMembers)
                     size = iec61850.LinkedList_size(dataSetMembers)
-                    #print("DatasetMembers: %s" % size)
+                    print("DatasetMembers: %s" % size)
                     dsIndex = 1
                     while dataSetMemberRef:
                         DSMember_name = iec61850.toCharP(dataSetMemberRef.data)
-                        #print(DSMember_name, "----DS------->" , dsIndex)
+                        print(DSMember_name, "----DS------->" , dsIndex)
                         dataSetMemberRef = iec61850.LinkedList_get(dataSetMembers, dsIndex)
                         dsIndex += 1
                     iIndex += 1
@@ -111,7 +111,7 @@ def observer():
                 print("***************\t\t"+LD_name+'/'+LN_name)
                 [reports, error] = iec61850.IedConnection_getLogicalNodeDirectory(con, LD_name+'/'+LN_name, iec61850.ACSI_CLASS_BRCB)
                 size = iec61850.LinkedList_size(reports)
-                #print("Reports: %s" % size)
+                print("Reports: %s" % size)
                 report = iec61850.LinkedList_getNext(reports)
                 repIndex = 1
                 while report:

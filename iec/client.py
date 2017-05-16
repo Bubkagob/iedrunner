@@ -382,7 +382,7 @@ class IecClient():
     def getDataSetDirectory(self):
         isDel = None
         #Working with Reports:
-        [self.__dataSetDirectory, error] = iec61850.IedConnection_getDataSetDirectory(self.__con, "TEMPLATELD0/LLN0.MxDs", isDel)
+        [self.__dataSetDirectory, error] = iec61850.IedConnection_getDataSetDirectory(self.__con, "ECISepam80_8/LLN0.MxDs", isDel)
         if (error == iec61850.IED_ERROR_OK):
             print("OK")
             if isDel:
@@ -397,19 +397,19 @@ class IecClient():
     def installHandler(self):
         print("--------------------Install Report receiver")
         iec61850.IedConnection_installReportHandler(self.__con,
-                                                    "TEMPLATELD0/LLN0.BR.brcbMX0101",
+                                                    "ECISepam80_8/LLN0.BR.brcbMX0101",
                                                     iec61850.ClientReportControlBlock_getRptId(self.__rcb),
                                                     self.reportCallbackFunction,
                                                     self.__dataSetDirectory
                                                     )
 
     def triggerReport(self):
-        iec61850.IedConnection_triggerGIReport(self.__con, "TEMPLATELD0/LLN0.BR.brcbMX0101")
+        iec61850.IedConnection_triggerGIReport(self.__con, "ECISepam80_8/LLN0.BR.brcbMX0101")
 
     def enableReport(self):
         print("Enabling rptEna")
         iec61850.ClientReportControlBlock_setResv(self.__rcb, True)
-        iec61850.ClientReportControlBlock_setDataSetReference(self.__rcb, "TEMPLATELD0/LLN0$MxDs")
+        iec61850.ClientReportControlBlock_setDataSetReference(self.__rcb, "ECISepam80_8/LLN0$MxDs")
         iec61850.ClientReportControlBlock_setRptEna(self.__rcb, True)
         iec61850.ClientReportControlBlock_setGI(self.__rcb, True)
         iec61850.IedConnection_setRCBValues(self.__con, self.__rcb, iec61850.RCB_ELEMENT_GI, True)
@@ -493,8 +493,8 @@ class IecClient():
 if __name__ == "__main__":
     try:
         clt=IecClient()
-        #cltThread = threading.Thread(target = clt.run)
-        #cltThread.start()
+        cltThread = threading.Thread(target = clt.run)
+        cltThread.start()
         #clt.get_model_from_server()
         # for ld in clt.get_ld_list():
         #     print("Checkin===",clt.get_name_of(ld))
@@ -504,12 +504,12 @@ if __name__ == "__main__":
         #     for rp in clt.get_rcrp_list_by_ldname(clt.get_name_of(ld)):
         #         print("Working with RC Unbuffered ---- > ", rp)
         #print(clt.get_rcb_dictionary('ECISepam20_7/LLN0.BR.brcbMX01'))
-        print(clt.read_time_test())
+        #print(clt.read_time_test())
 
         #clt.readInt32('ECISepam20_7/MSTA1.TrAmp3.mag.f')
         #clt.readST('ECISepam40_1/XCBR1.CBOpCap.stVal')
         #print(clt.get_varlist_by_ld_lnname('ECISepam20_7/MSTA1'))
-        clt.stop()
+        #clt.stop()
     except:
         running = 0
         print ("Error :")
