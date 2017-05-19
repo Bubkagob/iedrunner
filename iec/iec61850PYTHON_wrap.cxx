@@ -3044,16 +3044,16 @@ SWIG_Python_NonDynamicSetAttr(PyObject *obj, PyObject *name, PyObject *value) {
 #define SWIGTYPE_p_f_p_void_p_char_p_char_p_sMmsValue_bool__void swig_types[38]
 #define SWIGTYPE_p_f_p_void_p_char_unsigned_int_unsigned_long_long__void swig_types[39]
 #define SWIGTYPE_p_f_p_void_p_sAcseAuthenticationParameter_p_p_void__bool swig_types[40]
-#define SWIGTYPE_p_f_p_void_p_sClientReport__void swig_types[41]
-#define SWIGTYPE_p_f_p_void_p_sControlObjectClient__void swig_types[42]
-#define SWIGTYPE_p_f_p_void_p_sIedConnection__void swig_types[43]
-#define SWIGTYPE_p_f_p_void_p_sMmsValue_bool__ControlHandlerResult swig_types[44]
-#define SWIGTYPE_p_f_p_void_p_sMmsValue_bool_bool__ControlHandlerResult swig_types[45]
-#define SWIGTYPE_p_f_p_void_p_sMmsValue_bool_bool_p_sClientConnection__CheckHandlerResult swig_types[46]
-#define SWIGTYPE_p_f_p_void_p_sSettingGroupControlBlock_unsigned_char__void swig_types[47]
-#define SWIGTYPE_p_f_p_void_p_sSettingGroupControlBlock_unsigned_char_p_sClientConnection__bool swig_types[48]
-#define SWIGTYPE_p_f_p_void_p_unsigned_char_int_bool__void swig_types[49]
-#define SWIGTYPE_p_f_p_void_p_unsigned_char_unsigned_int__bool swig_types[50]
+#define SWIGTYPE_p_f_p_void_p_sControlObjectClient__void swig_types[41]
+#define SWIGTYPE_p_f_p_void_p_sIedConnection__void swig_types[42]
+#define SWIGTYPE_p_f_p_void_p_sMmsValue_bool__ControlHandlerResult swig_types[43]
+#define SWIGTYPE_p_f_p_void_p_sMmsValue_bool_bool__ControlHandlerResult swig_types[44]
+#define SWIGTYPE_p_f_p_void_p_sMmsValue_bool_bool_p_sClientConnection__CheckHandlerResult swig_types[45]
+#define SWIGTYPE_p_f_p_void_p_sSettingGroupControlBlock_unsigned_char__void swig_types[46]
+#define SWIGTYPE_p_f_p_void_p_sSettingGroupControlBlock_unsigned_char_p_sClientConnection__bool swig_types[47]
+#define SWIGTYPE_p_f_p_void_p_unsigned_char_int_bool__void swig_types[48]
+#define SWIGTYPE_p_f_p_void_p_unsigned_char_unsigned_int__bool swig_types[49]
+#define SWIGTYPE_p_f_p_void_p_void__void swig_types[50]
 #define SWIGTYPE_p_f_void__void swig_types[51]
 #define SWIGTYPE_p_int swig_types[52]
 #define SWIGTYPE_p_long_long swig_types[53]
@@ -5544,7 +5544,7 @@ SWIGINTERN PyObject *_wrap_IedConnection_installReportHandler(PyObject *SWIGUNUS
   IedConnection arg1 = (IedConnection) 0 ;
   char *arg2 = (char *) 0 ;
   char *arg3 = (char *) 0 ;
-  ReportCallbackFunction arg4 = (ReportCallbackFunction) 0 ;
+  void (*arg4)(void *,void *) = (void (*)(void *,void *)) 0 ;
   void *arg5 = (void *) 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
@@ -5578,9 +5578,9 @@ SWIGINTERN PyObject *_wrap_IedConnection_installReportHandler(PyObject *SWIGUNUS
   }
   arg3 = reinterpret_cast< char * >(buf3);
   {
-    int res = SWIG_ConvertFunctionPtr(obj3, (void**)(&arg4), SWIGTYPE_p_f_p_void_p_sClientReport__void);
+    int res = SWIG_ConvertFunctionPtr(obj3, (void**)(&arg4), SWIGTYPE_p_f_p_void_p_void__void);
     if (!SWIG_IsOK(res)) {
-      SWIG_exception_fail(SWIG_ArgError(res), "in method '" "IedConnection_installReportHandler" "', argument " "4"" of type '" "ReportCallbackFunction""'"); 
+      SWIG_exception_fail(SWIG_ArgError(res), "in method '" "IedConnection_installReportHandler" "', argument " "4"" of type '" "void (*)(void *,void *)""'"); 
     }
   }
   res5 = SWIG_ConvertPtr(obj4,SWIG_as_voidptrptr(&arg5), 0, 0);
@@ -5595,6 +5595,110 @@ SWIGINTERN PyObject *_wrap_IedConnection_installReportHandler(PyObject *SWIGUNUS
 fail:
   if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
   if (alloc3 == SWIG_NEWOBJ) delete[] buf3;
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_IedConnection_installReportHandlerAddr(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  unsigned long arg1 ;
+  char *arg2 = (char *) 0 ;
+  char *arg3 = (char *) 0 ;
+  void (*arg4)(void *,void *) = (void (*)(void *,void *)) 0 ;
+  void *arg5 = (void *) 0 ;
+  unsigned long val1 ;
+  int ecode1 = 0 ;
+  int res2 ;
+  char *buf2 = 0 ;
+  int alloc2 = 0 ;
+  int res3 ;
+  char *buf3 = 0 ;
+  int alloc3 = 0 ;
+  int res5 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  PyObject * obj4 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOOO:IedConnection_installReportHandlerAddr",&obj0,&obj1,&obj2,&obj3,&obj4)) SWIG_fail;
+  ecode1 = SWIG_AsVal_unsigned_SS_long(obj0, &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "IedConnection_installReportHandlerAddr" "', argument " "1"" of type '" "unsigned long""'");
+  } 
+  arg1 = static_cast< unsigned long >(val1);
+  res2 = SWIG_AsCharPtrAndSize(obj1, &buf2, NULL, &alloc2);
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "IedConnection_installReportHandlerAddr" "', argument " "2"" of type '" "char const *""'");
+  }
+  arg2 = reinterpret_cast< char * >(buf2);
+  res3 = SWIG_AsCharPtrAndSize(obj2, &buf3, NULL, &alloc3);
+  if (!SWIG_IsOK(res3)) {
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "IedConnection_installReportHandlerAddr" "', argument " "3"" of type '" "char const *""'");
+  }
+  arg3 = reinterpret_cast< char * >(buf3);
+  {
+    int res = SWIG_ConvertFunctionPtr(obj3, (void**)(&arg4), SWIGTYPE_p_f_p_void_p_void__void);
+    if (!SWIG_IsOK(res)) {
+      SWIG_exception_fail(SWIG_ArgError(res), "in method '" "IedConnection_installReportHandlerAddr" "', argument " "4"" of type '" "void (*)(void *,void *)""'"); 
+    }
+  }
+  res5 = SWIG_ConvertPtr(obj4,SWIG_as_voidptrptr(&arg5), 0, 0);
+  if (!SWIG_IsOK(res5)) {
+    SWIG_exception_fail(SWIG_ArgError(res5), "in method '" "IedConnection_installReportHandlerAddr" "', argument " "5"" of type '" "void *""'"); 
+  }
+  IedConnection_installReportHandlerAddr(arg1,(char const *)arg2,(char const *)arg3,arg4,arg5);
+  resultobj = SWIG_Py_Void();
+  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
+  if (alloc3 == SWIG_NEWOBJ) delete[] buf3;
+  return resultobj;
+fail:
+  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
+  if (alloc3 == SWIG_NEWOBJ) delete[] buf3;
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_IedConnection_ToAddress(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  IedConnection arg1 = (IedConnection) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  unsigned long result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:IedConnection_ToAddress",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_sIedConnection, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "IedConnection_ToAddress" "', argument " "1"" of type '" "IedConnection""'"); 
+  }
+  arg1 = reinterpret_cast< IedConnection >(argp1);
+  result = (unsigned long)IedConnection_ToAddress(arg1);
+  resultobj = SWIG_From_unsigned_SS_long(static_cast< unsigned long >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_ClientReport_FromInt(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  unsigned long arg1 ;
+  unsigned long val1 ;
+  int ecode1 = 0 ;
+  PyObject * obj0 = 0 ;
+  ClientReport result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:ClientReport_FromInt",&obj0)) SWIG_fail;
+  ecode1 = SWIG_AsVal_unsigned_SS_long(obj0, &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "ClientReport_FromInt" "', argument " "1"" of type '" "unsigned long""'");
+  } 
+  arg1 = static_cast< unsigned long >(val1);
+  result = (ClientReport)ClientReport_FromInt(arg1);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_sClientReport, 0 |  0 );
+  return resultobj;
+fail:
   return NULL;
 }
 
@@ -15483,6 +15587,37 @@ fail:
 }
 
 
+SWIGINTERN PyObject *_wrap_Timestamp_toMmsValue(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  Timestamp *arg1 = (Timestamp *) 0 ;
+  MmsValue *arg2 = (MmsValue *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  MmsValue *result = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:Timestamp_toMmsValue",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_Timestamp, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Timestamp_toMmsValue" "', argument " "1"" of type '" "Timestamp *""'"); 
+  }
+  arg1 = reinterpret_cast< Timestamp * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_sMmsValue, 0 |  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Timestamp_toMmsValue" "', argument " "2"" of type '" "MmsValue *""'"); 
+  }
+  arg2 = reinterpret_cast< MmsValue * >(argp2);
+  result = (MmsValue *)Timestamp_toMmsValue(arg1,arg2);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_sMmsValue, 0 |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
 SWIGINTERN PyObject *_wrap_LibIEC61850_getVersionString(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   char *result = 0 ;
@@ -25102,6 +25237,39 @@ fail:
 }
 
 
+SWIGINTERN PyObject *_wrap_IedServer_setLocalIpAddress(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  IedServer arg1 = (IedServer) 0 ;
+  char *arg2 = (char *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int res2 ;
+  char *buf2 = 0 ;
+  int alloc2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:IedServer_setLocalIpAddress",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_sIedServer, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "IedServer_setLocalIpAddress" "', argument " "1"" of type '" "IedServer""'"); 
+  }
+  arg1 = reinterpret_cast< IedServer >(argp1);
+  res2 = SWIG_AsCharPtrAndSize(obj1, &buf2, NULL, &alloc2);
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "IedServer_setLocalIpAddress" "', argument " "2"" of type '" "char const *""'");
+  }
+  arg2 = reinterpret_cast< char * >(buf2);
+  IedServer_setLocalIpAddress(arg1,(char const *)arg2);
+  resultobj = SWIG_Py_Void();
+  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
+  return resultobj;
+fail:
+  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
+  return NULL;
+}
+
+
 SWIGINTERN PyObject *_wrap_IedServer_start(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   IedServer arg1 = (IedServer) 0 ;
@@ -30606,6 +30774,9 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"IedConnection_getRCBValues", _wrap_IedConnection_getRCBValues, METH_VARARGS, NULL},
 	 { (char *)"IedConnection_setRCBValues", _wrap_IedConnection_setRCBValues, METH_VARARGS, NULL},
 	 { (char *)"IedConnection_installReportHandler", _wrap_IedConnection_installReportHandler, METH_VARARGS, NULL},
+	 { (char *)"IedConnection_installReportHandlerAddr", _wrap_IedConnection_installReportHandlerAddr, METH_VARARGS, NULL},
+	 { (char *)"IedConnection_ToAddress", _wrap_IedConnection_ToAddress, METH_VARARGS, NULL},
+	 { (char *)"ClientReport_FromInt", _wrap_ClientReport_FromInt, METH_VARARGS, NULL},
 	 { (char *)"IedConnection_uninstallReportHandler", _wrap_IedConnection_uninstallReportHandler, METH_VARARGS, NULL},
 	 { (char *)"IedConnection_triggerGIReport", _wrap_IedConnection_triggerGIReport, METH_VARARGS, NULL},
 	 { (char *)"ClientReport_getDataSetName", _wrap_ClientReport_getDataSetName, METH_VARARGS, NULL},
@@ -30922,6 +31093,7 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"Timestamp_setTimeInSeconds", _wrap_Timestamp_setTimeInSeconds, METH_VARARGS, NULL},
 	 { (char *)"Timestamp_setTimeInMilliseconds", _wrap_Timestamp_setTimeInMilliseconds, METH_VARARGS, NULL},
 	 { (char *)"Timestamp_setByMmsUtcTime", _wrap_Timestamp_setByMmsUtcTime, METH_VARARGS, NULL},
+	 { (char *)"Timestamp_toMmsValue", _wrap_Timestamp_toMmsValue, METH_VARARGS, NULL},
 	 { (char *)"LibIEC61850_getVersionString", _wrap_LibIEC61850_getVersionString, METH_VARARGS, NULL},
 	 { (char *)"MmsValue_createArray", _wrap_MmsValue_createArray, METH_VARARGS, NULL},
 	 { (char *)"MmsValue_getArraySize", _wrap_MmsValue_getArraySize, METH_VARARGS, NULL},
@@ -31300,6 +31472,7 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"IedModel_lookupDataAttributeByMmsValue", _wrap_IedModel_lookupDataAttributeByMmsValue, METH_VARARGS, NULL},
 	 { (char *)"IedServer_create", _wrap_IedServer_create, METH_VARARGS, NULL},
 	 { (char *)"IedServer_destroy", _wrap_IedServer_destroy, METH_VARARGS, NULL},
+	 { (char *)"IedServer_setLocalIpAddress", _wrap_IedServer_setLocalIpAddress, METH_VARARGS, NULL},
 	 { (char *)"IedServer_start", _wrap_IedServer_start, METH_VARARGS, NULL},
 	 { (char *)"IedServer_stop", _wrap_IedServer_stop, METH_VARARGS, NULL},
 	 { (char *)"IedServer_startThreadless", _wrap_IedServer_startThreadless, METH_VARARGS, NULL},
@@ -31483,7 +31656,6 @@ static swig_type_info _swigt__p_f_p_void_int_p_unsigned_char_unsigned_int__void 
 static swig_type_info _swigt__p_f_p_void_p_char_p_char_p_sMmsValue_bool__void = {"_p_f_p_void_p_char_p_char_p_sMmsValue_bool__void", "MmsInformationReportHandler|void (*)(void *,char *,char *,sMmsValue *,bool)", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_f_p_void_p_char_unsigned_int_unsigned_long_long__void = {"_p_f_p_void_p_char_unsigned_int_unsigned_long_long__void", "MmsFileDirectoryHandler|void (*)(void *,char *,unsigned int,unsigned long long)", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_f_p_void_p_sAcseAuthenticationParameter_p_p_void__bool = {"_p_f_p_void_p_sAcseAuthenticationParameter_p_p_void__bool", "AcseAuthenticator|bool (*)(void *,sAcseAuthenticationParameter *,void **)", 0, 0, (void*)0, 0};
-static swig_type_info _swigt__p_f_p_void_p_sClientReport__void = {"_p_f_p_void_p_sClientReport__void", "void (*)(void *,sClientReport *)|ReportCallbackFunction", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_f_p_void_p_sControlObjectClient__void = {"_p_f_p_void_p_sControlObjectClient__void", "CommandTerminationHandler|void (*)(void *,sControlObjectClient *)", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_f_p_void_p_sIedConnection__void = {"_p_f_p_void_p_sIedConnection__void", "IedConnectionClosedHandler|void (*)(void *,sIedConnection *)", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_f_p_void_p_sMmsValue_bool__ControlHandlerResult = {"_p_f_p_void_p_sMmsValue_bool__ControlHandlerResult", "ControlHandler|enum ControlHandlerResult (*)(void *,sMmsValue *,bool)", 0, 0, (void*)0, 0};
@@ -31493,6 +31665,7 @@ static swig_type_info _swigt__p_f_p_void_p_sSettingGroupControlBlock_unsigned_ch
 static swig_type_info _swigt__p_f_p_void_p_sSettingGroupControlBlock_unsigned_char_p_sClientConnection__bool = {"_p_f_p_void_p_sSettingGroupControlBlock_unsigned_char_p_sClientConnection__bool", "bool (*)(void *,sSettingGroupControlBlock *,unsigned char,sClientConnection *)|ActiveSettingGroupChangedHandler|EditSettingGroupChangedHandler", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_f_p_void_p_unsigned_char_int_bool__void = {"_p_f_p_void_p_unsigned_char_int_bool__void", "MmsRawMessageHandler|void (*)(void *,unsigned char *,int,bool)", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_f_p_void_p_unsigned_char_unsigned_int__bool = {"_p_f_p_void_p_unsigned_char_unsigned_int__bool", "bool (*)(void *,unsigned char *,unsigned int)|IedClientGetFileHandler", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_f_p_void_p_void__void = {"_p_f_p_void_p_void__void", "void (*)(void *,void *)", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_f_void__void = {"_p_f_void__void", "void (*)(void)", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_int = {"_p_int", "intptr_t *|int *|int_least32_t *|int_fast32_t *|int32_t *|int_fast16_t *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_long_long = {"_p_long_long", "int_least64_t *|int_fast64_t *|int64_t *|long long *|intmax_t *", 0, 0, (void*)0, 0};
@@ -31579,7 +31752,6 @@ static swig_type_info *swig_type_initial[] = {
   &_swigt__p_f_p_void_p_char_p_char_p_sMmsValue_bool__void,
   &_swigt__p_f_p_void_p_char_unsigned_int_unsigned_long_long__void,
   &_swigt__p_f_p_void_p_sAcseAuthenticationParameter_p_p_void__bool,
-  &_swigt__p_f_p_void_p_sClientReport__void,
   &_swigt__p_f_p_void_p_sControlObjectClient__void,
   &_swigt__p_f_p_void_p_sIedConnection__void,
   &_swigt__p_f_p_void_p_sMmsValue_bool__ControlHandlerResult,
@@ -31589,6 +31761,7 @@ static swig_type_info *swig_type_initial[] = {
   &_swigt__p_f_p_void_p_sSettingGroupControlBlock_unsigned_char_p_sClientConnection__bool,
   &_swigt__p_f_p_void_p_unsigned_char_int_bool__void,
   &_swigt__p_f_p_void_p_unsigned_char_unsigned_int__bool,
+  &_swigt__p_f_p_void_p_void__void,
   &_swigt__p_f_void__void,
   &_swigt__p_int,
   &_swigt__p_long_long,
@@ -31675,7 +31848,6 @@ static swig_cast_info _swigc__p_f_p_void_int_p_unsigned_char_unsigned_int__void[
 static swig_cast_info _swigc__p_f_p_void_p_char_p_char_p_sMmsValue_bool__void[] = {  {&_swigt__p_f_p_void_p_char_p_char_p_sMmsValue_bool__void, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_f_p_void_p_char_unsigned_int_unsigned_long_long__void[] = {  {&_swigt__p_f_p_void_p_char_unsigned_int_unsigned_long_long__void, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_f_p_void_p_sAcseAuthenticationParameter_p_p_void__bool[] = {  {&_swigt__p_f_p_void_p_sAcseAuthenticationParameter_p_p_void__bool, 0, 0, 0},{0, 0, 0, 0}};
-static swig_cast_info _swigc__p_f_p_void_p_sClientReport__void[] = {  {&_swigt__p_f_p_void_p_sClientReport__void, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_f_p_void_p_sControlObjectClient__void[] = {  {&_swigt__p_f_p_void_p_sControlObjectClient__void, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_f_p_void_p_sIedConnection__void[] = {  {&_swigt__p_f_p_void_p_sIedConnection__void, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_f_p_void_p_sMmsValue_bool__ControlHandlerResult[] = {  {&_swigt__p_f_p_void_p_sMmsValue_bool__ControlHandlerResult, 0, 0, 0},{0, 0, 0, 0}};
@@ -31685,6 +31857,7 @@ static swig_cast_info _swigc__p_f_p_void_p_sSettingGroupControlBlock_unsigned_ch
 static swig_cast_info _swigc__p_f_p_void_p_sSettingGroupControlBlock_unsigned_char_p_sClientConnection__bool[] = {  {&_swigt__p_f_p_void_p_sSettingGroupControlBlock_unsigned_char_p_sClientConnection__bool, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_f_p_void_p_unsigned_char_int_bool__void[] = {  {&_swigt__p_f_p_void_p_unsigned_char_int_bool__void, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_f_p_void_p_unsigned_char_unsigned_int__bool[] = {  {&_swigt__p_f_p_void_p_unsigned_char_unsigned_int__bool, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_f_p_void_p_void__void[] = {  {&_swigt__p_f_p_void_p_void__void, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_f_void__void[] = {  {&_swigt__p_f_void__void, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_int[] = {  {&_swigt__p_int, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_long_long[] = {  {&_swigt__p_long_long, 0, 0, 0},{0, 0, 0, 0}};
@@ -31771,7 +31944,6 @@ static swig_cast_info *swig_cast_initial[] = {
   _swigc__p_f_p_void_p_char_p_char_p_sMmsValue_bool__void,
   _swigc__p_f_p_void_p_char_unsigned_int_unsigned_long_long__void,
   _swigc__p_f_p_void_p_sAcseAuthenticationParameter_p_p_void__bool,
-  _swigc__p_f_p_void_p_sClientReport__void,
   _swigc__p_f_p_void_p_sControlObjectClient__void,
   _swigc__p_f_p_void_p_sIedConnection__void,
   _swigc__p_f_p_void_p_sMmsValue_bool__ControlHandlerResult,
@@ -31781,6 +31953,7 @@ static swig_cast_info *swig_cast_initial[] = {
   _swigc__p_f_p_void_p_sSettingGroupControlBlock_unsigned_char_p_sClientConnection__bool,
   _swigc__p_f_p_void_p_unsigned_char_int_bool__void,
   _swigc__p_f_p_void_p_unsigned_char_unsigned_int__bool,
+  _swigc__p_f_p_void_p_void__void,
   _swigc__p_f_void__void,
   _swigc__p_int,
   _swigc__p_long_long,

@@ -405,6 +405,18 @@ def IedConnection_installReportHandler(arg1, rcbReference, rptId, handler, handl
     return _iec61850.IedConnection_installReportHandler(arg1, rcbReference, rptId, handler, handlerParameter)
 IedConnection_installReportHandler = _iec61850.IedConnection_installReportHandler
 
+def IedConnection_installReportHandlerAddr(addr, rcbReference, rptId, handler, handlerParameter):
+    return _iec61850.IedConnection_installReportHandlerAddr(addr, rcbReference, rptId, handler, handlerParameter)
+IedConnection_installReportHandlerAddr = _iec61850.IedConnection_installReportHandlerAddr
+
+def IedConnection_ToAddress(arg1):
+    return _iec61850.IedConnection_ToAddress(arg1)
+IedConnection_ToAddress = _iec61850.IedConnection_ToAddress
+
+def ClientReport_FromInt(addr):
+    return _iec61850.ClientReport_FromInt(addr)
+ClientReport_FromInt = _iec61850.ClientReport_FromInt
+
 def IedConnection_uninstallReportHandler(arg1, rcbReference):
     return _iec61850.IedConnection_uninstallReportHandler(arg1, rcbReference)
 IedConnection_uninstallReportHandler = _iec61850.IedConnection_uninstallReportHandler
@@ -1684,6 +1696,10 @@ def Timestamp_setByMmsUtcTime(arg1, mmsValue):
     return _iec61850.Timestamp_setByMmsUtcTime(arg1, mmsValue)
 Timestamp_setByMmsUtcTime = _iec61850.Timestamp_setByMmsUtcTime
 
+def Timestamp_toMmsValue(arg1, mmsValue):
+    return _iec61850.Timestamp_toMmsValue(arg1, mmsValue)
+Timestamp_toMmsValue = _iec61850.Timestamp_toMmsValue
+
 def LibIEC61850_getVersionString():
     return _iec61850.LibIEC61850_getVersionString()
 LibIEC61850_getVersionString = _iec61850.LibIEC61850_getVersionString
@@ -2901,6 +2917,10 @@ IedServer_create = _iec61850.IedServer_create
 def IedServer_destroy(arg1):
     return _iec61850.IedServer_destroy(arg1)
 IedServer_destroy = _iec61850.IedServer_destroy
+
+def IedServer_setLocalIpAddress(arg1, localIpAddress):
+    return _iec61850.IedServer_setLocalIpAddress(arg1, localIpAddress)
+IedServer_setLocalIpAddress = _iec61850.IedServer_setLocalIpAddress
 
 def IedServer_start(arg1, tcpPort):
     return _iec61850.IedServer_start(arg1, tcpPort)

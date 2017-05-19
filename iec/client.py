@@ -3,6 +3,7 @@ import threading
 import traceback
 import getch
 import iec61850
+from ctypes import *
 
 
 running = 1
@@ -263,19 +264,19 @@ class IecClient():
                 sys.exit()
             elif pressedKey == 'g':
                 print("GetAttributes....")
-                self.getRCB()
+                self.get_rcb()
             elif pressedKey == 'r':
                 print("Read Attributes....")
                 self.readAttributes()
             elif pressedKey == 'i':
                 print("Install report receiver....")
-                self.installHandler()
+                self.install_handler()
             elif pressedKey == 'e':
                 print("Enabling Report....")
-                self.enableReport()
+                self.enable_report()
             elif pressedKey == 'd':
                 print("Disabling Report....")
-                self.disableReport()
+                self.disable_report()
             elif pressedKey == 't':
                 print("Trigger report")
                 self.triggerReport()
@@ -329,22 +330,8 @@ class IecClient():
         iec61850.IedConnection_destroy(self.__con)
         #sys.exit()
 
-    def reportCallbackFunction(self, parameter, report):
-        print("Report CallBack Function")
-        size = iec61850.LinkedList_size(parameter)
-        print("Entries count: %s" % size)
-        entry = iec61850.LinkedList_getNext(parameter)
-        Index = 1
-        while entry:
-            entry_name = iec61850.toCharP(entry.data)
-            print(entry_name, "Entry------->" , Index)
-            entry = iec61850.LinkedList_get(parameter, Index)
-            Index += 1
-        #iec61850.LinkedList_destroy(parameter)
-        print("Report received!")
-
-    def getRCB(self):
-        [self.__rcb, error] = iec61850.IedConnection_getRCBValues(self.__con, "ECISepam80_8/LLN0.BR.brcbMX01", None)
+    def get_rcb(self):
+        [self.__rcb, error] = iec61850.IedConnection_getRCBValues(self.__con, "TEMPLATELD0/LLN0.BR.brcbMX0101", None)
         if (error == iec61850.IED_ERROR_OK):
             print("RCB read success")
         else:
@@ -394,25 +381,119 @@ class IecClient():
             self.stop()
             #sys.exit(-1)
 
-    def installHandler(self):
-        print("--------------------Install Report receiver")
-        iec61850.IedConnection_installReportHandler(self.__con,
-                                                    "ECISepam80_8/LLN0.BR.brcbMX0101",
-                                                    iec61850.ClientReportControlBlock_getRptId(self.__rcb),
-                                                    self.reportCallbackFunction,
-                                                    self.__dataSetDirectory
-                                                    )
+    def reportCallbackFunction(self, parameter, report):
+        print("Report CallBack Function")
+        size = iec61850.LinkedList_size(parameter)
+        print("Entries count: %s" % size)
+        entry = iec61850.LinkedList_getNext(parameter)
+        Index = 1
+        while entry:
+            entry_name = iec61850.toCharP(entry.data)
+            print(entry_name, "Entry------->" , Index)
+            entry = iec61850.LinkedList_get(parameter, Index)
+            Index += 1
+        #iec61850.LinkedList_destroy(parameter)
+        print("Report received!")
+
+    def handler(self, param, ptr):
+        print("Handler")
+        print(type(ptr))
+        print(ptr)
+        print(type(param))
+        report = iec61850.ClientReport_FromInt(ptr)
+        mmsvalue = iec61850.ClientReport_getDataSetValues(report)
+        mms_type = iec61850.MmsValue_getType(mmsvalue)
+        print('MMS Type:', mms_type)
+        type_string = iec61850.MmsValue_getTypeString(mmsvalue)
+        print('String Type:', type_string)
+        quality = iec61850.Quality_fromMmsValue(mmsvalue)
+        iec61850.MmsValue_delete(mmsvalue)
+        print('Quality:', quality)
+        print("Got report: " + str(iec61850.ClientReport_getRcbReference(report)))
+        #1 dataset name
+        ds_name = iec61850.ClientReport_getDataSetName(report)
+        print('Dataset name:',ds_name)
+        #rcb rcbReference
+        rcb_ref = iec61850.ClientReport_getRcbReference(report)
+        print('RCB reference', rcb_ref)
+        #report_id
+        report_id = iec61850.ClientReport_getRptId(report)
+        print('Report ID', report_id)
+        #report_id
+        reason = iec61850.ClientReport_getReasonForInclusion(report, 0)
+        print('Reason', reason)
+        entry_id = iec61850.ClientReport_getEntryId(report)
+        print('Entry ID', entry_id)
+        has_timestamp = iec61850.ClientReport_hasTimestamp(report)
+        print('has timestamp', has_timestamp)
+        has_seq_num = iec61850.ClientReport_hasSeqNum(report)
+        print('has seq number', has_seq_num)
+        seq_num = iec61850.ClientReport_getSeqNum(report)
+        print('Seq number', seq_num)
+        has_dataset_name = iec61850.ClientReport_hasDataSetName(report)
+        print('has dataset name', has_dataset_name)
+        has_reason = iec61850.ClientReport_hasReasonForInclusion(report)
+        print('has reason', has_reason)
+        has_conf_rev = iec61850.ClientReport_hasConfRev(report)
+        print('has conf rev', has_conf_rev)
+        conf_rev = iec61850.ClientReport_getConfRev(report)
+        print('conf rev', conf_rev)
+        has_buf_ovfl = iec61850.ClientReport_hasBufOvfl(report)
+        print('has overflow buffer', has_buf_ovfl)
+        buf_ovfl = iec61850.ClientReport_getBufOvfl(report)
+        print('Buffer overflow', buf_ovfl)
+        has_dataset_ref = iec61850.ClientReport_hasDataReference(report)
+        print('has dataset ref', has_dataset_ref)
+        dataset_ref = iec61850.ClientReport_getDataReference(report, 0)
+        print('dataset ref', dataset_ref)
+        time_stamp = iec61850.ClientReport_getTimestamp(report)
+        print('time_stamp', time_stamp)
+        reason_string = iec61850.ReasonForInclusion_getValueAsString(reason)
+        print('Reason string', reason_string)
+        print("Report received!")
+
+
+
+    # def installHandler(self):
+    #     print("--------------------Install Report receiver")
+    #     iec61850.IedConnection_installReportHandler(self.__con,
+    #                                                 "ECISepam80_8/LLN0.BR.brcbMX0101",
+    #                                                 iec61850.ClientReportControlBlock_getRptId(self.__rcb),
+    #                                                 self.reportCallbackFunction,
+    #                                                 self.__dataSetDirectory
+    #                                                 )
+    def install_handler(self):
+        CB_PROTO=CFUNCTYPE(None, c_void_p, c_void_p)
+        cbinst=CB_PROTO(self.handler)
+        val = c_int()
+        api=CDLL("/home/ivan/Projects/libiec61850/build/src/libiec61850.so")
+        ReportHandler=api.IedConnection_installReportHandlerAddr
+
+        ReportHandler.argtypes=[c_uint, c_char_p, c_char_p, CB_PROTO, c_void_p]
+        ReportHandler.restype = None
+        addr=iec61850.IedConnection_ToAddress(self.__con)
+        rptRef=create_string_buffer(b"TEMPLATELD0/LLN0.BR.brcbMX0101")
+        rptID = create_string_buffer(b"TEMPLATELD0/LLN0$BR$brcbMX0101")
+        ReportHandler(addr, rptRef,rptID, cbinst, None)
+        print("Enabled: " + str(iec61850.ClientReportControlBlock_getRptEna(self.__rcb)))
+        iec61850.ClientReportControlBlock_setTrgOps(self.__rcb, iec61850.TRG_OPT_DATA_UPDATE | iec61850.TRG_OPT_GI);
+        iec61850.ClientReportControlBlock_setRptEna(self.__rcb, True)
+        error = iec61850.IedConnection_setRCBValues(self.__con, self.__rcb, iec61850.RCB_ELEMENT_RPT_ENA | iec61850.RCB_ELEMENT_TRG_OPS, True)
+        print("Enabled2: " + str(iec61850.ClientReportControlBlock_getRptEna(self.__rcb)))
+        print(self.__error)
+        input("Wait input....")
+
 
     def triggerReport(self):
-        iec61850.IedConnection_triggerGIReport(self.__con, "ECISepam80_8/LLN0.BR.brcbMX0101")
+        iec61850.IedConnection_triggerGIReport(self.__con, "TEMPLATELD0/LLN0.BR.brcbMX0101")
 
-    def enableReport(self):
+    def enable_report(self):
         print("Enabling rptEna")
-        iec61850.ClientReportControlBlock_setResv(self.__rcb, True)
-        iec61850.ClientReportControlBlock_setDataSetReference(self.__rcb, "ECISepam80_8/LLN0$MxDs")
         iec61850.ClientReportControlBlock_setRptEna(self.__rcb, True)
-        iec61850.ClientReportControlBlock_setGI(self.__rcb, True)
-        iec61850.IedConnection_setRCBValues(self.__con, self.__rcb, iec61850.RCB_ELEMENT_GI, True)
+
+    def disable_report(self):
+        print("Enabling rptEna")
+        iec61850.ClientReportControlBlock_setRptEna(self.__rcb, False)
 
     def disableReport(self):
         print("disable rptEna")
