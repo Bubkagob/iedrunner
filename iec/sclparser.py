@@ -132,7 +132,6 @@ class SclParser:
             print("Failed with DAI ckecking === > ", dai.get('name'), "on line", dai.sourceline)
             return False
 
-
     def get_da_from_dotype_by_name(self, dotype, daname):
         gen = (datype for datype in dotype.iterchildren() if datype.get('type') and datype.get('name')==daname)
         for el in gen:
@@ -269,8 +268,6 @@ class SclParser:
         for enum in gen:
             return enum
 
-
-
     def get_dotype_from_lntype_by_name(self, lntype, doiname):
         gen = (do for do in lntype.DO if do.get('name')==doiname)
         for el in gen:
@@ -355,8 +352,6 @@ class SclParser:
             rc_names.append(rc.get('name')+'01')
         return rc_names
 
-
-
     def get_fcda_list_from_ds(self, ds):
         fcda_list = []
         for fcda in ds.iterchildren(tag='{*}FCDA'):
@@ -380,7 +375,6 @@ class SclParser:
                         var_fcda.append(ied.get('name')+ld.get('inst')+'/'+self.get_ln_name_from_fcda(fcda)+'.'+fcda.get('doName'))
         return var_fcda
 
-
     def get_ln_name_from_fcda(self, fcda):
         if fcda.get('prefix'):
             return (fcda.get('prefix')+fcda.get('lnClass')+fcda.get('lnInst'))
@@ -389,7 +383,6 @@ class SclParser:
                 return (fcda.get('lnClass')+fcda.get('lnInst'))
             else:
                 return (fcda.get('lnClass'))
-
 
     def var_collecter(self, dotype, name='', tempd={}, fc=''):
         temp_dict = tempd
@@ -402,7 +395,6 @@ class SclParser:
             else:
                 self.var_collecter(self.get_datatype_by_id(da.get('type')), name+'.'+da.get('name'), temp_dict, fc_name)
         return temp_dict
-
 
     def get_rcb_full_names(self):
         for ied in self.get_ied_list():
@@ -432,9 +424,6 @@ class SclParser:
                             print('\t\tVariables: ')
                             for k, v in var_list_from_node.items():
                                 print(k, v)
-
-
-
 
     def get_do_type_by_id_from_lntype(self, lnodetype, doi_name):
         gen = (dotype for dotype in lnodetype.iterchildren() if dotype.get('name')==doi_name)
@@ -786,7 +775,6 @@ class SclParser:
             rc_names.append(rc.get('name')+'01')
         return rc_names
 
-
     def test_rc_attributes_ok_in_server(self, ied_ld_name, clt):
         ied = self.get_ied_by_iedld_name(ied_ld_name)
         for ld in self.__get_ld_list_from_ied(ied):
@@ -806,7 +794,6 @@ class SclParser:
                                 print(type(rc_dict_from_file[k]), "Ouch", k, type(rc_dict_from_server[k]))
                                 return False
         return True
-
 
     def var_fc_builder(self, dotype, name='', tempd={}, fc=''):
         temp_dict = tempd
@@ -931,8 +918,6 @@ class SclParser:
         if btype == 'Quality':
             return 'uint16 '+ str(quality)
 
-
-
     def var_type_maxvalue_builder(self, dotype, name='', tempd={}, bt=''):
         temp_dict = tempd
         btype_name=bt
@@ -1009,10 +994,6 @@ class SclParser:
                         return False
         return True
 
-#'''
-###############################          CHECK bTypes
-#'''
-
     def test_lnode_btype_parameters_is_ok(self, ied_ld_name, clt):
         ied = self.get_ied_by_iedld_name(ied_ld_name)
         for ld in self.__get_ld_list_from_ied(ied):
@@ -1072,7 +1053,6 @@ class SclParser:
             self.checker(flow_file, clt)
         return True
 
-
     def get_vars_fc(self):
         for ied in self.get_ied_list():
             var_max_list = {}
@@ -1091,8 +1071,6 @@ class SclParser:
         for rc in ld.LN0.iterchildren(tag='{*}ReportControl'):
             rc_list.append(rc)
         return rc_list
-
-
 
     def get_all_reports_dicts_list_from_rc(self, reportcontrol):
         reports_list = []
@@ -1158,8 +1136,6 @@ class SclParser:
             res_dict['CBref'] = pre_name +'/LLN0.'+is_buffered+'.'+rcname
             reports_list.append(res_dict)
         return reports_list
-
-
 
     def trigger_that_var(self, dotype, name, tempd, fc):
         temp_dict = tempd
@@ -1242,7 +1218,7 @@ class SclParser:
     def test_report_control(self, ied_ld_name, clt):
         print()
         print('getting RCB')
-        # clt.get_rcb('TEMPLATELD0/LLN0.BR.brcbMX0101')
+        # clt.get_rcb('TEMPLATELD0/LLN0.BR.brcbMX01')
         clt.get_rcb('RP2_19LD0/LLN0.BR.brcbMX01')
         clt.enable_report()
         # clt.get_rcb('RP2_19LD0/LLN0.BR.brcbST01')
@@ -1250,13 +1226,11 @@ class SclParser:
         # clt.install_handler()
         # clt.get_report_enabled()
         # clt.install_handler('TEMPLATELD0/LLN0.BR.brcbST0101', 'TEMPLATELD0/LLN0$BR$brcbST0101')
-        # clt.install_handler('TEMPLATELD0/LLN0.BR.brcbMX0101', 'TEMPLATELD0/LLN0$BR$brcbMX0101')
+        # clt.install_handler('TEMPLATELD0/LLN0.BR.brcbMX01', 'TEMPLATELD0/LLN0$BR$brcbMX01')
         # clt.install_handler('RP2_19LD0/LLN0.BR.brcbST01', 'RP2_19LD0/LLN0$BR$brcbST01')
         clt.install_handler('RP2_19LD0/LLN0.BR.brcbMX01', 'RP2_19LD0/LLN0$BR$brcbMX01')
         # clt.install_handler('ECISepam80_8/LLN0.BR.brcbMX01', 'ECISepam80_8/LLN0$BR$brcbMX01')
         # input("Waiting...")
-        # clt.install_handler()
-        # clt.enable_report()
         # clt.get_report_enabled()
         # clt.trigger_gi('TEMPLATELD0/LLN0.BR.brcbMX0201')
         # clt.disable_report()
@@ -1288,9 +1262,6 @@ class SclParser:
 #                       for k, v in reported_vars.items():
 #                           print(k, v, report_dict['dchg'], report_dict['qchg'])
 
-'''
-#############################################################################
-'''
 
 if __name__ == "__main__":
     try:

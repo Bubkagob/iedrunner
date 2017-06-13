@@ -27,7 +27,7 @@ class IecClient():
         iednames = []
         [deviceList, error] = iec61850.IedConnection_getLogicalDeviceList(self.__con)
         device = iec61850.LinkedList_getNext(deviceList)
-        while device: #Iterate over each device from deviceList
+        while device: # Iterate over each device from deviceList
             iednames.append(iec61850.toCharP(device.data))
             device = iec61850.LinkedList_getNext(device)
         iec61850.LinkedList_destroy(deviceList)
@@ -36,16 +36,14 @@ class IecClient():
     def get_name_of(self, obj):
         return iec61850.toCharP(obj.data)
 
-        model = iec61850.IedConnection_getDeviceModelFromServer(self.__con)
-
     def get_ld_list(self):
         ld_list = []
         [ldList, self.__error] = iec61850.IedConnection_getLogicalDeviceList(self.__con)
         device = iec61850.LinkedList_getNext(ldList)
-        while device: #Iterate over each device from deviceList
+        while device:  # Iterate over each device from deviceList
             ld_list.append(device)
             device = iec61850.LinkedList_getNext(device)
-        #iec61850.LinkedList_destroy(ldList)
+        # iec61850.LinkedList_destroy(ldList)
         return ld_list
 
     def get_ln(self, ld, lname):
@@ -494,6 +492,7 @@ class IecClient():
         input("Wait input....")
 
     def install_handler(self, CBref, rID):
+        print(self.get_rcb_dictionary(CBref))
         CB_PROTO = CFUNCTYPE(None, c_void_p, c_void_p)
         cbinst = CB_PROTO(self.func_handler)
         api = CDLL("/home/ivan/Projects/libiec61850/debug/src/libiec61850.so")
@@ -505,9 +504,9 @@ class IecClient():
         rptRef = create_string_buffer(bytes(CBref, encoding='UTF-8'))
         rptID = create_string_buffer(bytes(rID, encoding='UTF-8'))
         ReportHandler(addr, rptRef, rptID, cbinst, None)
+        iec61850.ClientReportControlBlock_setTrgOps(self.__rcb, iec61850.TRG_OPT_DATA_CHANGED | iec61850.TRG_OPT_QUALITY_CHANGED | iec61850.TRG_OPT_INTEGRITY | iec61850.TRG_OPT_GI)
+        self.__error = iec61850.IedConnection_setRCBValues(self.__con, self.__rcb, iec61850.RCB_ELEMENT_RPT_ENA | iec61850.RCB_ELEMENT_TRG_OPS, True)
         input("Wait input....")
-
-
 
     def triggerReport(self):
         iec61850.IedConnection_triggerGIReport(self.__con, "TEMPLATELD0/LLN0.BR.brcbMX0201")
