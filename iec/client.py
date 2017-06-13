@@ -16,11 +16,9 @@ class IecClient():
             if (self.__error == iec61850.IED_ERROR_OK):
                 running = 1
             else:
-                print("ошибка",self.__error)
+                print("ошибка", self.__error)
         except Exception as e:
             print('Connection exception: ', str(e))
-            running = 0
-            #sys.exit(-1)
 
     def get_connection_state(self):
         return iec61850.IedConnection_getState(self.__con)
@@ -38,7 +36,6 @@ class IecClient():
     def get_name_of(self, obj):
         return iec61850.toCharP(obj.data)
 
-    def get_model_from_server(self):
         model = iec61850.IedConnection_getDeviceModelFromServer(self.__con)
 
     def get_ld_list(self):
@@ -75,7 +72,6 @@ class IecClient():
             iIndex += 1
         iec61850.LinkedList_destroy(dataObjects)
         return do_names
-
 
     def get_ln_names(self, ld):
         ln_names = []
@@ -175,9 +171,6 @@ class IecClient():
         else:
             print('FC name not in Library')
 
-
-
-
     def get_vartype_by_fc(self, varname, fc):
         [obj, self._error] = iec61850.IedConnection_readObject(self.__con, varname, self.get_IEC61850_FC_by_fc(fc))
         objtype = iec61850.MmsValue_getTypeString(obj)
@@ -190,7 +183,6 @@ class IecClient():
         for variable in var_dict_fc:
             var_dict[variable]=self.get_vartype_by_fc(variable, var_dict_fc[variable])
         return var_dict
-
 
     def get_rcbr_list_by_ldname(self, ldname):
         rc_names = []
@@ -286,7 +278,7 @@ class IecClient():
             else:
                 print("Key Pressed:" + str(pressedKey))
 
-    def readBoolean(self, var):
+    def read_boolean(self, var):
         [booleanValue, self.__error] = iec61850.IedConnection_readBooleanValue(self.__con, var, iec61850.IEC61850_FC_ST)
         return booleanValue
 
@@ -330,13 +322,12 @@ class IecClient():
         iec61850.IedConnection_destroy(self.__con)
         #sys.exit()
 
-    def get_rcb(self):
-        [self.__rcb, error] = iec61850.IedConnection_getRCBValues(self.__con, "TEMPLATELD0/LLN0.BR.brcbMX0101", None)
+    def get_rcb(self, CBref):
+        [self.__rcb, error] = iec61850.IedConnection_getRCBValues(self.__con, CBref, None)
         if (error == iec61850.IED_ERROR_OK):
             print("RCB read success")
         else:
             print("failed to read RCB")
-
 
     def get_rcb_dictionary(self, report_name):
         [self.__rcb, error] = iec61850.IedConnection_getRCBValues(self.__con, report_name, None)
@@ -363,8 +354,6 @@ class IecClient():
         else:
             print("failed to read RCB")
             self.stop()
-
-
 
     def getDataSetDirectory(self):
         isDel = None
@@ -395,31 +384,24 @@ class IecClient():
         #iec61850.LinkedList_destroy(parameter)
         print("Report received!")
 
-    def handler(self, param, ptr):
-        print("Handler")
-        print(type(ptr))
-        print(ptr)
-        print(type(param))
+    def func_handler(self, param, ptr):
+        print("------------ Func Handler")
         report = iec61850.ClientReport_FromInt(ptr)
-        mmsvalue = iec61850.ClientReport_getDataSetValues(report)
-        mms_type = iec61850.MmsValue_getType(mmsvalue)
-        print('MMS Type:', mms_type)
-        type_string = iec61850.MmsValue_getTypeString(mmsvalue)
-        print('String Type:', type_string)
-        quality = iec61850.Quality_fromMmsValue(mmsvalue)
-        iec61850.MmsValue_delete(mmsvalue)
-        print('Quality:', quality)
+        # mmsvalue = iec61850.ClientReport_getDataSetValues(report)
+        # mms_type = iec61850.MmsValue_getType(mmsvalue)
+        # print('MMS Type:', mms_type)
+        # type_string = iec61850.MmsValue_getTypeString(mmsvalue)
+        # print('String Type:', type_string)
+        # quality = iec61850.Quality_fromMmsValue(mmsvalue)
+        # iec61850.MmsValue_delete(mmsvalue)
+        # print('Quality:', quality)
         print("Got report: " + str(iec61850.ClientReport_getRcbReference(report)))
-        #1 dataset name
         ds_name = iec61850.ClientReport_getDataSetName(report)
         print('Dataset name:',ds_name)
-        #rcb rcbReference
         rcb_ref = iec61850.ClientReport_getRcbReference(report)
         print('RCB reference', rcb_ref)
-        #report_id
         report_id = iec61850.ClientReport_getRptId(report)
         print('Report ID', report_id)
-        #report_id
         reason = iec61850.ClientReport_getReasonForInclusion(report, 0)
         print('Reason', reason)
         entry_id = iec61850.ClientReport_getEntryId(report)
@@ -452,57 +434,110 @@ class IecClient():
         print('Reason string', reason_string)
         print("Report received!")
 
-
-
-    # def installHandler(self):
-    #     print("--------------------Install Report receiver")
-    #     iec61850.IedConnection_installReportHandler(self.__con,
-    #                                                 "ECISepam80_8/LLN0.BR.brcbMX0101",
-    #                                                 iec61850.ClientReportControlBlock_getRptId(self.__rcb),
-    #                                                 self.reportCallbackFunction,
-    #                                                 self.__dataSetDirectory
-    #                                                 )
-    def install_handler(self):
-        CB_PROTO=CFUNCTYPE(None, c_void_p, c_void_p)
-        cbinst=CB_PROTO(self.handler)
+    def install_handler1(self):
+        print("Start")
+        hostname = "localhost"
+        tcpPort = 102
+        con = iec61850.IedConnection_create()
+        error = iec61850.IedConnection_connect(con, hostname, tcpPort)
+        print(str(error))
+        CB_PROTO = CFUNCTYPE(None, c_void_p, c_void_p)
+        cbinst = CB_PROTO(self.func_handler)
         val = c_int()
-        api=CDLL("/home/ivan/Projects/libiec61850/build/src/libiec61850.so")
-        ReportHandler=api.IedConnection_installReportHandlerAddr
-
-        ReportHandler.argtypes=[c_uint, c_char_p, c_char_p, CB_PROTO, c_void_p]
+        api = CDLL("/home/ivan/Projects/libiec61850/build/src/libiec61850.so")
+        ReportHandler = api.IedConnection_installReportHandlerAddr
+        ReportHandler.argtypes = [c_uint, c_char_p, c_char_p, CB_PROTO, c_void_p]
         ReportHandler.restype = None
-        addr=iec61850.IedConnection_ToAddress(self.__con)
-        rptRef=create_string_buffer(b"TEMPLATELD0/LLN0.BR.brcbMX0101")
-        rptID = create_string_buffer(b"TEMPLATELD0/LLN0$BR$brcbMX0101")
+        addr=iec61850.IedConnection_ToAddress(con)
+        rcb, error = iec61850.IedConnection_getRCBValues(con,"TEMPLATELD0/LLN0.BR.brcbST0101", None)
+        print("RCB:" + str(rcb))
+        rid = iec61850.ClientReportControlBlock_getRptId(rcb)
+        print("OriginalID: " + rid)
+        rptRef = create_string_buffer(b"TEMPLATELD0/LLN0.BR.brcbST0101")
+        rptID = create_string_buffer(b"TEMPLATELD0/LLN0$BR$brcbST0101")
         ReportHandler(addr, rptRef,rptID, cbinst, None)
-        print("Enabled: " + str(iec61850.ClientReportControlBlock_getRptEna(self.__rcb)))
-        iec61850.ClientReportControlBlock_setTrgOps(self.__rcb, iec61850.TRG_OPT_DATA_UPDATE | iec61850.TRG_OPT_GI);
-        iec61850.ClientReportControlBlock_setRptEna(self.__rcb, True)
-        error = iec61850.IedConnection_setRCBValues(self.__con, self.__rcb, iec61850.RCB_ELEMENT_RPT_ENA | iec61850.RCB_ELEMENT_TRG_OPS, True)
-        print("Enabled2: " + str(iec61850.ClientReportControlBlock_getRptEna(self.__rcb)))
-        print(self.__error)
+        print("Enabled " + str(iec61850.ClientReportControlBlock_getRptEna(rcb)))
+        iec61850.ClientReportControlBlock_setTrgOps(rcb, iec61850.TRG_OPT_DATA_UPDATE | iec61850.TRG_OPT_GI);
+        iec61850.ClientReportControlBlock_setRptEna(rcb, True)
+        error = iec61850.IedConnection_setRCBValues(con, rcb, iec61850.RCB_ELEMENT_RPT_ENA | iec61850.RCB_ELEMENT_TRG_OPS, True)
+        print(error)
+        if (error == iec61850.IED_ERROR_OK):
+            print("Connection is OK")
+        else:
+            print ("Connection error status")
+        print("Enabled " + str(iec61850.ClientReportControlBlock_getRptEna(rcb)))
+        input("Wait input ... ")
+        iec61850.IedConnection_close(con)
+        iec61850.IedConnection_destroy(con)
+
+    def install_handler2(self, CBref, rID):
+        CB_PROTO = CFUNCTYPE(None, c_void_p, c_void_p)
+        cbinst = CB_PROTO(self.func_handler)
+        api = CDLL("/home/ivan/Projects/libiec61850/debug/src/libiec61850.so")
+        ReportHandler = api.IedConnection_installReportHandlerAddr
+        ReportHandler.argtypes = [c_uint, c_char_p, c_char_p, CB_PROTO, c_void_p]
+        ReportHandler.restype = None
+        addr = iec61850.IedConnection_ToAddress(self.__con)
+        # self.__rcb, self.__error = iec61850.IedConnection_getRCBValues(self.__con, CBref, None)
+        print("RCB:" + str(self.__rcb))
+        rid = iec61850.ClientReportControlBlock_getRptId(self.__rcb)
+        print("OriginalID: " + rid)
+        rptRef = create_string_buffer(bytes(CBref, encoding='UTF-8'))
+        rptID = create_string_buffer(bytes(rID, encoding='UTF-8'))
+        # rptRef = create_string_buffer(b"TEMPLATELD0/LLN0.BR.brcbST0101")
+        # rptID = create_string_buffer(b"TEMPLATELD0/LLN0$BR$brcbST0101")
+        ReportHandler(addr, rptRef, rptID, cbinst, None)
+        # iec61850.ClientReportControlBlock_setTrgOps(self.__rcb, iec61850.TRG_OPT_DATA_CHANGED | iec61850.TRG_OPT_QUALITY_CHANGED | iec61850.TRG_OPT_INTEGRITY | iec61850.TRG_OPT_GI)
+        # iec61850.ClientReportControlBlock_setRptEna(self.__rcb, True)
+        # self.__error = iec61850.IedConnection_setRCBValues(self.__con, self.__rcb, iec61850.RCB_ELEMENT_RPT_ENA | iec61850.RCB_ELEMENT_TRG_OPS, True)
+        # print("Enabled " + str(iec61850.ClientReportControlBlock_getRptEna(self.__rcb)))
+        input("Wait input....")
+
+    def install_handler(self, CBref, rID):
+        CB_PROTO = CFUNCTYPE(None, c_void_p, c_void_p)
+        cbinst = CB_PROTO(self.func_handler)
+        api = CDLL("/home/ivan/Projects/libiec61850/debug/src/libiec61850.so")
+        ReportHandler = api.IedConnection_installReportHandlerAddr
+        ReportHandler.argtypes = [c_uint, c_char_p, c_char_p, CB_PROTO, c_void_p]
+        ReportHandler.restype = None
+        addr = iec61850.IedConnection_ToAddress(self.__con)
+        rid = iec61850.ClientReportControlBlock_getRptId(self.__rcb)
+        rptRef = create_string_buffer(bytes(CBref, encoding='UTF-8'))
+        rptID = create_string_buffer(bytes(rID, encoding='UTF-8'))
+        ReportHandler(addr, rptRef, rptID, cbinst, None)
         input("Wait input....")
 
 
+
     def triggerReport(self):
-        iec61850.IedConnection_triggerGIReport(self.__con, "TEMPLATELD0/LLN0.BR.brcbMX0101")
+        iec61850.IedConnection_triggerGIReport(self.__con, "TEMPLATELD0/LLN0.BR.brcbMX0201")
+
+    def trigger_gi(self, CBref):
+        iec61850.IedConnection_triggerGIReport(self.__con, CBref)
+
+    def get_report_enabled(self):
+        print("Is Enabled: " + str(iec61850.ClientReportControlBlock_getRptEna(self.__rcb)))
 
     def enable_report(self):
         print("Enabling rptEna")
         iec61850.ClientReportControlBlock_setRptEna(self.__rcb, True)
+        self.__error = iec61850.IedConnection_setRCBValues(self.__con, self.__rcb, iec61850.RCB_ELEMENT_RPT_ENA, True)
 
     def disable_report(self):
-        print("Enabling rptEna")
+        print("Disabling rptEna")
+        #iec61850.ClientReportControlBlock_setGI(self.__rcb, False)
         iec61850.ClientReportControlBlock_setRptEna(self.__rcb, False)
+
+    def destroy_report(self):
+        print("Destroying report ...")
+        iec61850.ClientReportControlBlock_destroy(self.__rcb)
 
     def disableReport(self):
         print("disable rptEna")
         iec61850.ClientReportControlBlock_setResv(self.__rcb, False)
         iec61850.ClientReportControlBlock_setRptEna(self.__rcb, False)
         iec61850.ClientReportControlBlock_setGI(self.__rcb, False)
-        iec61850.ClientReportControlBlock_setGI(self.__rcb, False)
         iec61850.IedConnection_setRCBValues(self.__con, self.__rcb, iec61850.RCB_ELEMENT_GI, False)
-
 
     def read_object(self, varname, fc):
         [obj, self._error] = iec61850.IedConnection_readObject(self.__con, varname, self.get_IEC61850_FC_by_fc(fc))
@@ -561,15 +596,97 @@ class IecClient():
         [int128, error] = iec61850.IedConnection_readObject(self.__con, "ECISepam80_8/XCBR1.SumSwARs.actVal", iec61850.IEC61850_FC_ST)
         print("int128 Type:\t\t", iec61850.MmsValue_getTypeString(int128))
 
-    def read_quality_test(self):
-        [qualityValue, self.__error] = iec61850.IedConnection_readQualityValue(self.__con, "ECISepam20_7/MSTA1.TrAmp3.q", iec61850.IEC61850_FC_MX)
-        print(qualityValue)
-
     def read_time_test(self):
         time = iec61850.Timestamp()
         [timeStampValue, self.__error] = iec61850.IedConnection_readTimestampValue(self.__con, "ECISepam80_8/A51N_PTOC6.Op.t", iec61850.IEC61850_FC_MX, time)
         return iec61850.Timestamp_getTimeInMs(time)
 
+    def read_float_test(self):
+        float_value = self.read_float("TEMPLATELD0/MMXU3.PhV.phsA.cVal.mag.f", 'MX')
+        print(float_value)
+
+    def read_boolean_test(self):
+        val = self.read_boolean("TEMPLATELD0/PTRC1.BlkInd1.stVal")
+        print(val)
+
+    def get_fc_by_varname(self, varname):
+        [deviceList, self.__error] = iec61850.IedConnection_getLogicalDeviceList(self.__con)
+        device = iec61850.LinkedList_getNext(deviceList)
+        while device:
+            ld_inst = iec61850.toCharP(device.data)
+            [logicalNodes, self.__error] = iec61850.IedConnection_getLogicalDeviceDirectory(self.__con, iec61850.toCharP(device.data))
+            lnode = iec61850.LinkedList_getNext(logicalNodes)
+            while lnode:
+                ln_name = iec61850.toCharP(lnode.data)
+                [variables, self.__error] = iec61850.IedConnection_getLogicalNodeVariables(self.__con, ld_inst+'/'+ln_name)
+                variable = iec61850.LinkedList_get(variables, 0)
+                vIndex = 1
+                while variable:
+                    name = iec61850.toCharP(variable.data)
+                    #fc_name = name.split("$", 1)[0]
+                    if '$' in name:
+                        var_name = name.split("$",1)[1]
+                        var_name = var_name.replace("$", ".")
+                        #print(fc_name, "-----FC------>" , vIndex)
+                        #var_dict[ld_inst+'/'+ln_name+'.'+var_name]=fc_name
+                        temp_name = ld_inst+'/'+ln_name+'.'+var_name
+                        if varname == temp_name:
+                            fc_name = name.split("$", 1)[0]
+                    variable = iec61850.LinkedList_get(variables, vIndex)
+                    vIndex += 1
+                iec61850.LinkedList_destroy(variables)
+                lnode = iec61850.LinkedList_getNext(lnode)
+            iec61850.LinkedList_destroy(logicalNodes)
+            device = iec61850.LinkedList_getNext(device)
+        iec61850.LinkedList_destroy(deviceList)
+        return fc_name
+
+    def read_quality_test(self, var_name):
+        [qualityValue, self.__error] = iec61850.IedConnection_readQualityValue(self.__con, var_name, iec61850.IEC61850_FC_ST)
+        print(qualityValue)
+
+    def read_uint32_test(self, var_name):
+        [intValue, self.__error] = iec61850.IedConnection_readUnsigned32Value(self.__con, var_name, iec61850.IEC61850_FC_ST)
+        print(intValue)
+
+    def read_int32_test(self, var_name):
+        [intValue, self.__error] = iec61850.IedConnection_readInt32Value(self.__con, var_name, iec61850.IEC61850_FC_ST)
+        print(int(intValue))
+
+    def read_st_test(self, var):
+        [stValue, self.__error] = iec61850.IedConnection_readUnsigned32Value(self.__con, var, iec61850.IEC61850_FC_ST)
+        print('stVal Value:\t\t', stValue)
+        [st, self.__error] = iec61850.IedConnection_readObject(self.__con, var, iec61850.IEC61850_FC_ST)
+        print("STVal_Type:\t\t", iec61850.MmsValue_getBitStringSize(st))
+        print("STVal_Type:\t\t", iec61850.MmsValue_getBitStringAsInteger(st))
+        iec61850.MmsValue_delete(st)
+
+    def get_vartype(self, var):
+        return self.get_vartype_by_fc(var, self.get_fc_by_varname(var))
+
+    def read_var(self, var):
+        var_type = self.get_vartype_by_fc(var, self.get_fc_by_varname(var))
+        fc = self.get_IEC61850_FC_by_fc(self.get_fc_by_varname(var))
+        [mms_object, self.__error] = iec61850.IedConnection_readObject(self.__con, var, fc)
+        mms_value = 0
+        if var_type == 'bit-string':
+            mms_value = iec61850.MmsValue_getBitStringAsInteger(mms_object)
+        if var_type == 'utc-time':
+            mms_value = iec61850.MmsValue_getUtcTimeInMs(mms_object)
+        if var_type == 'integer':
+            mms_value = iec61850.MmsValue_toInt64(mms_object)
+        if var_type == 'boolean':
+            mms_value = str(iec61850.MmsValue_getBoolean(mms_object))
+        if var_type == 'unsigned':
+            mms_value = iec61850.MmsValue_toUint32(mms_object)
+        if var_type == 'float':
+            mms_value = float("{0:.3f}".format(iec61850.MmsValue_toFloat(mms_object)))
+        if var_type == 'octet-string':
+            mms_value = iec61850.MmsValue_getOctetStringSize(mms_object)
+        if var_type not in ['bit-string', 'unsigned','utc-time', 'integer', 'boolean', 'float', 'octet-string']:
+            print(var_type)
+        iec61850.MmsValue_delete(mms_object)
+        return mms_value, var_type
 
 if __name__ == "__main__":
     try:
@@ -584,13 +701,13 @@ if __name__ == "__main__":
         #         print("Working with RC buffered ---- > ", rc)
         #     for rp in clt.get_rcrp_list_by_ldname(clt.get_name_of(ld)):
         #         print("Working with RC Unbuffered ---- > ", rp)
-        #print(clt.get_rcb_dictionary('ECISepam20_7/LLN0.BR.brcbMX01'))
+        #print(clt.get_rcb_dictionary('TEMPLATELD0/LLN0.BR.brcbST0101'))
         #print(clt.read_time_test())
 
         #clt.readInt32('ECISepam20_7/MSTA1.TrAmp3.mag.f')
         #clt.readST('ECISepam40_1/XCBR1.CBOpCap.stVal')
         #print(clt.get_varlist_by_ld_lnname('ECISepam20_7/MSTA1'))
-        #clt.stop()
+        clt.stop()
     except:
         running = 0
         print ("Error :")

@@ -124,6 +124,10 @@ class IECTestCase(unittest.TestCase):
     def test_var_flow(self):
         self.assertTrue(self.scl.test_var_storm(self.__IEDLDNAME, self.clt))
 
+    @unittest.skipIf(not test_connection, "Reason: connection_test Failed")
+    def test_reports(self):
+        self.assertTrue(self.scl.test_report_control(self.__IEDLDNAME, self.clt))
+
 def run_all_tests(filename, ip, ied_ld_name):
     #test_suite for file tester
     suite = unittest.TestSuite()
@@ -148,11 +152,12 @@ def run_all_tests(filename, ip, ied_ld_name):
     suiteIEC = unittest.TestSuite()
     suiteIEC.addTest(IECTestCase("test_connection", filename, ip, ied_ld_name))
     suiteIEC.addTest(IECTestCase("test_structure_check_in_server", filename, ip, ied_ld_name))
-    suiteIEC.addTest(IECTestCase("test_rcb_instance_name", filename, ip, ied_ld_name))
-    suiteIEC.addTest(IECTestCase("test_rcb_attributes", filename, ip, ied_ld_name))
-    suiteIEC.addTest(IECTestCase("test_node_variable_fc", filename, ip, ied_ld_name))
-    suiteIEC.addTest(IECTestCase("test_node_variable_btype", filename, ip, ied_ld_name))
-    suiteIEC.addTest(IECTestCase("test_var_flow", filename, ip, ied_ld_name))
+    #suiteIEC.addTest(IECTestCase("test_rcb_instance_name", filename, ip, ied_ld_name))
+    #suiteIEC.addTest(IECTestCase("test_rcb_attributes", filename, ip, ied_ld_name))
+    #suiteIEC.addTest(IECTestCase("test_node_variable_fc", filename, ip, ied_ld_name))
+    #suiteIEC.addTest(IECTestCase("test_node_variable_btype", filename, ip, ied_ld_name))
+    #suiteIEC.addTest(IECTestCase("test_var_flow", filename, ip, ied_ld_name))
+    suiteIEC.addTest(IECTestCase("test_reports", filename, ip, ied_ld_name))
     runnerIEC = unittest.TextTestRunner(verbosity=2)
     resultIEC = runnerIEC.run(suiteIEC)
     status_two = len(resultIEC.failures) + len(resultIEC.errors) + len(resultIEC.skipped)

@@ -1,5 +1,7 @@
-from lxml import etree, objectify
+from lxml import objectify
 import subprocess
+import time
+
 
 class SclParser:
     def __init__(self, scd_file):
@@ -8,7 +10,7 @@ class SclParser:
         self.__root = root.getroot()
         self.__ddt = self.__root.DataTypeTemplates
 
-    #lxml list
+    # lxml list
     def __get_subnet_list(self):
         sn_list = []
         try:
@@ -18,7 +20,7 @@ class SclParser:
         except:
             return sn_list
 
-    #lxml list
+    # lxml list
     def get_ap_list(self):
         ap_list = []
         for sn in self.__get_subnet_list():
@@ -26,17 +28,18 @@ class SclParser:
                 ap_list.append(capp)
         return ap_list
 
-    #object ied list
+    # object ied list
     def get_ied_list(self):
-        ied_list=[]
+        ied_list = []
         for ied in self.__root.IED:
             ied_list.append(ied)
         return ied_list
 
-    #object LD list
+    # object LD list
     def __get_ld_list_from_ied(self, ied):
         ld_list = []
-        gen = (device for device in ied.AccessPoint.Server.iterchildren() if device.get('inst'))
+        gen = (device for device in ied.AccessPoint.Server.iterchildren()
+               if device.get('inst'))
         for device in gen:
             ld_list.append(device)
         return ld_list
@@ -48,8 +51,7 @@ class SclParser:
                 ld_list.append(ld)
         return ld_list
 
-
-    #IEDname list IED name + inst
+    # IEDname list IED name + inst
     def get_ied_ld_names(self):
         iedname_list = []
         for ied in self.get_ied_list():
@@ -57,14 +59,14 @@ class SclParser:
                 iedname_list.append(ied.get('name')+ld.get('inst'))
         return iedname_list
 
-    #IED_LDname list by IED_LD name
+    # IED_LDname list by IED_LD name
     def get_ied_ld_names_by_ied(self, ied):
         iedname_list = []
         for ld in self.__get_ld_list_from_ied(ied):
             iedname_list.append(ied.get('name')+ld.get('inst'))
         return iedname_list
 
-    #all of AP ip list from Communication block
+    # all of AP ip list from Communication block
     def get_ip_list(self):
         ip_list = []
         for ap in self.get_ap_list():
@@ -305,9 +307,13 @@ class SclParser:
             do_list.append(do)
         return do_list
 
-
     def get_lntype_by_id(self, idtype):
         gen = (lntype for lntype in self.__ddt.LNodeType if lntype.get('id')==idtype)
+        for lnodetype in gen:
+            return lnodetype
+
+    def get_lntype_by_lnclass(self, ln_class):
+        gen = (lntype for lntype in self.__ddt.LNodeType if lntype.get('lnClass')==ln_class)
         for lnodetype in gen:
             return lnodetype
 
@@ -316,6 +322,13 @@ class SclParser:
         for ds in ld.LN0.iterchildren(tag='{*}DataSet'):
             ds_list.append(ds)
         return ds_list
+
+    def get_dataset_from_ld_by_name(self, ld, name):
+        ds_list = self.get_ds_list_from_ld(ld)
+        for ds in ds_list:
+            if ds.get('name')==name:
+                return ds
+        return ('Fail on', ds.sourceline)
 
     def get_dsnames_list_from_ld(self, ld):
         ds_list=[]
@@ -329,7 +342,6 @@ class SclParser:
             rc_list.append(rc)
         return rc_list
 
-    def get_rcname_list_from_rc(self, rc):
         rc_names = []
         if hasattr(rc, 'RptEnabled'):
             report_num = int(rc.RptEnabled.get('max'))
@@ -351,6 +363,24 @@ class SclParser:
             fcda_list.append(fcda)
         return fcda_list
 
+    def get_fcda_varlist_from_ds(self, ds):
+        var_fcda=[]
+        for fcda in self.get_fcda_list_from_ds(ds):
+            print(fcda.sourceline)
+            var_fcda.append(self.get_ln_name_from_fcda(fcda)+'.'+fcda.get('doName'))
+        return var_fcda
+
+    def get_full_fcda_varlist(self):
+        var_fcda=[]
+        for ied in self.get_ied_list():
+            for ld in self.__get_ld_list_from_ied(ied):
+                for ds in self.get_ds_list_from_ld(ld):
+                    for fcda in self.get_fcda_list_from_ds(ds):
+                        print(fcda.sourceline)
+                        var_fcda.append(ied.get('name')+ld.get('inst')+'/'+self.get_ln_name_from_fcda(fcda)+'.'+fcda.get('doName'))
+        return var_fcda
+
+
     def get_ln_name_from_fcda(self, fcda):
         if fcda.get('prefix'):
             return (fcda.get('prefix')+fcda.get('lnClass')+fcda.get('lnInst'))
@@ -359,6 +389,52 @@ class SclParser:
                 return (fcda.get('lnClass')+fcda.get('lnInst'))
             else:
                 return (fcda.get('lnClass'))
+
+
+    def var_collecter(self, dotype, name='', tempd={}, fc=''):
+        temp_dict = tempd
+        fc_name=fc
+        for da in dotype.iterchildren():
+            if(da.get('fc')):
+                fc_name = da.get('fc')
+            if not da.get('type') or (da.get('type') and da.get('bType')=='Enum'):
+                temp_dict[name+'.'+da.get('name')]=fc_name
+            else:
+                self.var_collecter(self.get_datatype_by_id(da.get('type')), name+'.'+da.get('name'), temp_dict, fc_name)
+        return temp_dict
+
+
+    def get_rcb_full_names(self):
+        for ied in self.get_ied_list():
+            for ld in self.__get_ld_list_from_ied(ied):
+                ds_list = self.get_ds_list_from_ld(ld)
+                for rc in self.get_rc_list_from_ld(ld):
+                    if rc.get('buffered') and rc.get('buffered')=='true':
+                        is_buffered = '.BR.'
+                    else:
+                        is_buffered = '.RP.'
+                    for cb in self.get_rcname_list_from_rc(rc):
+                        print('*********REPORT CONTROL*********')
+                        print(ied.get('name')+ld.get('inst')+'/LLN0'+is_buffered+cb, rc.sourceline)
+                        print('*********MEMBERS*********')
+                        ds = self.get_dataset_from_ld_by_name(ld, rc.get('datSet'))
+                        for fcda in self.get_fcda_list_from_ds(ds):
+                            lntype = self.get_lntype_by_lnclass(fcda.get('lnClass'))
+                            var_list_from_node = {}
+                            lninst = ied.get('name')+ld.get('inst')+'/'+self.get_ln_name_from_fcda(fcda)+'.'
+                            for do in self.get_do_list_from_lntype(lntype):
+                                dotype = self.__get_dotypeobj_by_id(do.get('type'))
+                                if do.get('name')==fcda.get('doName'):
+                                    var_list_from_node.update(self.var_collecter(dotype, name=lninst+do.get('name'), tempd={}))
+                            print('\t\t\tLNODE TYPE---' , lntype.get('id'))
+                            print('********* DO *********')
+                            print(ied.get('name')+ld.get('inst')+'/'+self.get_ln_name_from_fcda(fcda)+'.'+fcda.get('doName'))
+                            print('\t\tVariables: ')
+                            for k, v in var_list_from_node.items():
+                                print(k, v)
+
+
+
 
     def get_do_type_by_id_from_lntype(self, lnodetype, doi_name):
         gen = (dotype for dotype in lnodetype.iterchildren() if dotype.get('name')==doi_name)
@@ -555,7 +631,7 @@ class SclParser:
                         return False
                     for key in trg.keys():
                         if trg.get(key)=='':
-                            print(key, "attribute is empty in TrgOps block on line", of.sourceline, "from ReportControl on line", rc.sourceline, "from LDevice on line", ld.sourceline)
+                            print(key, "attribute is empty in TrgOps block on line", trg.sourceline, "from ReportControl on line", rc.sourceline, "from LDevice on line", ld.sourceline)
                             return False
                 for of in rc.iterdescendants(tag='{*}OptFields'):
                     if not set(req_of) <= set(of.keys()) :
@@ -683,53 +759,52 @@ class SclParser:
                         return False
         return True
 
-    def get_rc_dict(self, reportcontrol):
-        res_dict = {}
-        res_dict['buffered'] = bool(reportcontrol.get('buffered')=='true')
-        res_dict['bufTime'] = reportcontrol.get('bufTime')
-        res_dict['confRev'] = reportcontrol.get('confRev')
-        if not reportcontrol.get('rptID'):
-            rc_names_from_file = self.get_rcname_list_from_rc(reportcontrol)
-            for rc_name in rc_names_from_file:
-                ldev_parent = reportcontrol.iterancestors(tag='{*}LDevice')
-                ied_parent = reportcontrol.iterancestors(tag='{*}IED')
-                for ied in ied_parent:
-                    for ldev in ldev_parent:
-                        res_dict['rptID'] = ied.get('name')+ldev.get('inst')+'/LLN0$BR$'+rc_name
+    # def get_rcname_list_from_rc(self, rc):
+    #     rc_names = []
+    #     if hasattr(rc, 'RptEnabled'):
+    #         report_num = int(rc.RptEnabled.get('max'))
+    #         for i in range(report_num):
+    #             if report_num < 8:
+    #                 rcname = rc.get('name')+'0'+str(i+1)
+    #             else:
+    #                 rcname = rc.get('name')+str(i+1)
+    #             rc_names.append(rcname)
+    #     else:
+    #         rc_names.append(rc.get('name')+'01')
+    #     return rc_names
+    def get_rcname_list_from_rc(self, rc):
+        rc_names = []
+        if hasattr(rc, 'RptEnabled'):
+            report_num = int(rc.RptEnabled.get('max'))
+            for i in range(report_num):
+                if report_num < 8:
+                    rcname = rc.get('name')+'0'+str(i+1)
+                else:
+                    rcname = rc.get('name')+str(i+1)
+                rc_names.append(rcname)
         else:
-            res_dict['rptID'] = reportcontrol.get('rptID')
-        if hasattr(reportcontrol, 'TrgOps'):
-            res_dict['dchg'] = bool(reportcontrol.TrgOps.get('dchg') == 'true')
-            res_dict['qchg'] = bool(reportcontrol.TrgOps.get('qchg') == 'true')
-            if reportcontrol.TrgOps.get('dupd'):
-                res_dict['dupd'] = bool(reportcontrol.TrgOps.get('dupd') == 'true')
-            res_dict['period'] = bool(reportcontrol.TrgOps.get('period') == 'true')
-        if hasattr(reportcontrol, 'OptFields'):
-            res_dict['seqNum'] = bool(reportcontrol.OptFields.get('seqNum') == 'true')
-            res_dict['timeStamp'] = bool(reportcontrol.OptFields.get('timeStamp') == 'true')
-            res_dict['reasonCode'] = bool(reportcontrol.OptFields.get('reasonCode') == 'true')
-            res_dict['dataSet'] = bool(reportcontrol.OptFields.get('dataSet') == 'true')
-            res_dict['dataRef'] = bool(reportcontrol.OptFields.get('dataRef') == 'true')
-        return res_dict
+            rc_names.append(rc.get('name')+'01')
+        return rc_names
+
 
     def test_rc_attributes_ok_in_server(self, ied_ld_name, clt):
         ied = self.get_ied_by_iedld_name(ied_ld_name)
         for ld in self.__get_ld_list_from_ied(ied):
             for rcontrol in self.get_rc_list_from_ld(ld):
                 rc_names_from_file = self.get_rcname_list_from_rc(rcontrol)
-                rc_dict_from_file = self.get_rc_dict(rcontrol)
-                for rc_name in rc_names_from_file:
-                    if rcontrol.get('buffered')=='true':
-                        rpt_name = ied.get('name')+ld.get('inst')+'/LLN0.BR.'+rc_name
-                    else:
-                        rpt_name = ied.get('name')+ld.get('inst')+'/LLN0.RP.'+rc_name
-                    rc_dict_from_server = clt.get_rcb_dictionary(rpt_name)
-                    for k in rc_dict_from_file:
-                        if not rc_dict_from_file[k] == rc_dict_from_server[k]:
-                            print("ReportControl attr:", k, "from RCB", rpt_name, "from line", rcontrol.sourceline, "not equal with same attribute in", ied_ld_name,"instance from Server")
-                            print(rc_dict_from_file[k], "Ouch", k, rc_dict_from_server[k])
-                            print(type(rc_dict_from_file[k]), "Ouch", k, type(rc_dict_from_server[k]))
-                            return False
+                for rc_dict_from_file in self.get_all_reports_dicts_list_from_rc(rcontrol):
+                    for rc_name in rc_names_from_file:
+                        if rcontrol.get('buffered')=='true':
+                            rpt_name = ied.get('name')+ld.get('inst')+'/LLN0.BR.'+rc_name
+                        else:
+                            rpt_name = ied.get('name')+ld.get('inst')+'/LLN0.RP.'+rc_name
+                        rc_dict_from_server = clt.get_rcb_dictionary(rpt_name)
+                        for k in rc_dict_from_file:
+                            if not rc_dict_from_file[k] == rc_dict_from_server[k]:
+                                print("ReportControl attr:", k, "from RCB", rpt_name, "from line", rcontrol.sourceline, "not equal with same attribute in", ied_ld_name,"instance from Server")
+                                print(rc_dict_from_file[k], "Ouch", k, rc_dict_from_server[k])
+                                print(type(rc_dict_from_file[k]), "Ouch", k, type(rc_dict_from_server[k]))
+                                return False
         return True
 
 
@@ -911,8 +986,6 @@ class SclParser:
                 self.var_btype_builder(self.get_datatype_by_id(da.get('type')), name+'.'+da.get('name'), temp_dict, btype_name)
         return temp_dict
 
-
-
     def test_lnode_fc_parameters_is_ok(self, ied_ld_name, clt):
         ied = self.get_ied_by_iedld_name(ied_ld_name)
         for ld in self.__get_ld_list_from_ied(ied):
@@ -936,6 +1009,9 @@ class SclParser:
                         return False
         return True
 
+#'''
+###############################          CHECK bTypes
+#'''
 
     def test_lnode_btype_parameters_is_ok(self, ied_ld_name, clt):
         ied = self.get_ied_by_iedld_name(ied_ld_name)
@@ -958,52 +1034,12 @@ class SclParser:
                         return False
         return True
 
-# тест который создает файлы переменных, запускает shm клиента, потом сверяет
-    def checker(self, filename, clt):
-        print("-"*60)
-        vars_from_server = clt.get_var_dict_fc_by_ied()
-        print("Trying to check values...")
-        with open(filename) as f:
-            requests = [request.split() for request in f]
-            try:
-                gen = (request for request in requests if len(request) == 3)
-                for req in gen:
-                    self.line_requester(req, vars_from_server, clt)
-                print("Checking finished")
-                return True
-            except Exception as e:
-                print('!!!Exception!!!!!         Exception: ', str(e) )
-
-    def line_requester(self, req, server_dict, clt):
-        fc =  server_dict[req[0]]
-        if req[1] in ['f32', 'f64']:
-            server_val = clt.read_float(req[0], fc)
-            if not (float(req[2]) == server_val):
-                print("ReadFloat_32_64 trouble   -   -   ->",req[0],req[2] , server_val)
-        if req[1] in ['int16', 'int32']:
-            server_val = clt.read_int32(req[0], fc)
-            if not (int(req[2]) == server_val):
-                print("ReadInt32_16 trouble   -   -   ->",req[0],req[2] , server_val)
-        if req[1] in ['uint32', 'uint16', 'uint8']:
-            server_val = clt.read_uint32(req[0], fc)
-            if not (int(req[2]) == server_val):
-                print("Read_UInt32_16_8 trouble   -   -   ->",req[0],req[2] , server_val)
-        if req[1] in ['uint64']:
-            server_val = clt.read_timestamp(req[0], fc)
-            if not (int(req[2]) == server_val):
-                print("Read TimeStamp trouble   -   -   ->",req[0],req[2] , server_val)
-        if req[0][-1:]=='q' and req[1] in ['uint16']:
-            server_val = clt.read_quality(req[0], fc)
-            if not (int(req[2]) == server_val):
-                print("Read Quality trouble  -   -   ->",req[0],req[2] , server_val)
-
     def sas_client(self, filename):
-        client = '/home/ivan/Projects/sas/rattlehead/build/test/tools/test-client'
+        client = '/tmp/rattlehead/tmp/test-tools/test-client'
         connection = 'conn1'
-        timeout = str(1)
+        timeout = str(0)
         cmd = client+' --connection='+connection+' --file='+filename+' --timeout='+timeout +' > /dev/null'
         proc = subprocess.run(cmd, shell = True)
-
 
     def test_var_storm(self, ied_ld_name, clt):
         ied = self.get_ied_by_iedld_name(ied_ld_name)
@@ -1050,6 +1086,207 @@ class SclParser:
                     for k, v in var_max_list.items():
                         print(k, v)
 
+    def get_rcb_list_from_ld(self, ld):
+        rc_list=[]
+        for rc in ld.LN0.iterchildren(tag='{*}ReportControl'):
+            rc_list.append(rc)
+        return rc_list
+
+
+
+    def get_all_reports_dicts_list_from_rc(self, reportcontrol):
+        reports_list = []
+        res_dict = {}
+
+        if hasattr(reportcontrol, 'TrgOps'):
+            res_dict['dchg'] = bool(reportcontrol.TrgOps.get('dchg') == 'true')
+            res_dict['qchg'] = bool(reportcontrol.TrgOps.get('qchg') == 'true')
+            if reportcontrol.TrgOps.get('dupd'):
+                res_dict['dupd'] = bool(reportcontrol.TrgOps.get('dupd') == 'true')
+            res_dict['period'] = bool(reportcontrol.TrgOps.get('period') == 'true')
+
+        if hasattr(reportcontrol, 'OptFields'):
+            res_dict['seqNum'] = bool(reportcontrol.OptFields.get('seqNum') == 'true')
+            res_dict['timeStamp'] = bool(reportcontrol.OptFields.get('timeStamp') == 'true')
+            res_dict['reasonCode'] = bool(reportcontrol.OptFields.get('reasonCode') == 'true')
+            res_dict['dataSet'] = bool(reportcontrol.OptFields.get('dataSet') == 'true')
+            res_dict['dataRef'] = bool(reportcontrol.OptFields.get('dataRef') == 'true')
+
+        conf_rev = reportcontrol.get('confRev')
+        buf = reportcontrol.get('bufTime')
+        is_buff = bool(reportcontrol.get('buffered')=='true')
+        res_dict['bufTime'] = buf
+        res_dict['confRev'] = conf_rev
+        res_dict['buffered'] = is_buff
+        is_buffered = ('BR' if res_dict['buffered'] else 'RP')
+        ldev_parent = reportcontrol.iterancestors(tag='{*}LDevice')
+        ied_parent = reportcontrol.iterancestors(tag='{*}IED')
+        for ied in ied_parent:
+            for ldev in ldev_parent:
+                pre_name = ied.get('name')+ldev.get('inst')
+
+        # forks if more than 1 subscriber
+        if hasattr(reportcontrol, 'RptEnabled'):
+            report_num = int(reportcontrol.RptEnabled.get('max'))
+            for i in range(report_num):
+                res_dict = {}
+                if report_num < 8:
+                    rcname = reportcontrol.get('name')+'0'+str(i+1)
+                else:
+                    rcname = reportcontrol.get('name')+str(i+1)
+                res_dict['bufTime'] = buf
+                res_dict['confRev'] = conf_rev
+                res_dict['buffered'] = is_buff
+                res_dict['rptID'] = pre_name+'/LLN0$'+is_buffered+'$'+rcname
+                res_dict['CBref'] = pre_name+'/LLN0.'+is_buffered+'.'+rcname
+                if hasattr(reportcontrol, 'TrgOps'):
+                    res_dict['dchg'] = bool(reportcontrol.TrgOps.get('dchg') == 'true')
+                    res_dict['qchg'] = bool(reportcontrol.TrgOps.get('qchg') == 'true')
+                    if reportcontrol.TrgOps.get('dupd'):
+                        res_dict['dupd'] = bool(reportcontrol.TrgOps.get('dupd') == 'true')
+                    res_dict['period'] = bool(reportcontrol.TrgOps.get('period') == 'true')
+                if hasattr(reportcontrol, 'OptFields'):
+                    res_dict['seqNum'] = bool(reportcontrol.OptFields.get('seqNum') == 'true')
+                    res_dict['timeStamp'] = bool(reportcontrol.OptFields.get('timeStamp') == 'true')
+                    res_dict['reasonCode'] = bool(reportcontrol.OptFields.get('reasonCode') == 'true')
+                    res_dict['dataSet'] = bool(reportcontrol.OptFields.get('dataSet') == 'true')
+                    res_dict['dataRef'] = bool(reportcontrol.OptFields.get('dataRef') == 'true')
+                reports_list.append(res_dict)
+        else:
+            rcname = reportcontrol.get('name')+'01'
+            res_dict['rptID'] = pre_name +'/LLN0$'+is_buffered+'$'+rcname
+            res_dict['CBref'] = pre_name +'/LLN0.'+is_buffered+'.'+rcname
+            reports_list.append(res_dict)
+        return reports_list
+
+
+
+    def trigger_that_var(self, dotype, name, tempd, fc):
+        temp_dict = tempd
+        [rc_dchg, rc_qchg] = fc
+        for da in dotype.iterchildren():
+            if not da.get('type') or (da.get('type') and da.get('bType')=='Enum'):
+                if da.get('dchg') and da.get('dchg') == 'true':
+                    #rc_dchg = da.get('dchg')
+                    rc_dchg = (bool(0) if not (da.get('dchg') == 'true') == rc_dchg else bool(1))
+                    #rc_dchg = (bool(0) if da.get('dchg') == 'false' else bool(1))
+                else:
+                    rc_dchg = bool(0)
+                if da.get('qchg') and da.get('qchg') == 'true':
+                    rc_qchg = (bool(0) if not (da.get('qchg') == 'true') == rc_qchg else bool(1))
+                else:
+                    rc_qchg = bool(0)
+                temp_dict[name+'.'+da.get('name')]=(rc_dchg, rc_qchg)
+                [rc_dchg, rc_qchg] = fc
+            else:
+                self.trigger_that_var(self.get_datatype_by_id(da.get('type')), name+'.'+da.get('name'), temp_dict, fc)
+        return temp_dict
+
+# returns a dictionary of Varname : Tuple (data, quality triggers)
+    def get_reported_vars(self, iedname, ld, report):
+        report_list = self.get_all_reports_dicts_list_from_rc(report)
+        for report_dict in report_list:
+            triggers = (report_dict['dchg'], report_dict['qchg'])
+            ds = self.get_dataset_from_ld_by_name(ld, report.get('datSet'))
+            reported_vars = {}
+            for fcda in self.get_fcda_list_from_ds(ds):
+                ln_name = self.get_ln_name_from_fcda(fcda)
+                lntype = self.get_lntype_by_id((self.get_lntype_by_full_ln_name(ld, ln_name)))
+                lninst = iedname + ld.get('inst')+'/'+self.get_ln_name_from_fcda(fcda)+'.'
+                for do in self.get_do_list_from_lntype(lntype):
+                    dotype = self.__get_dotypeobj_by_id(do.get('type'))
+                    if do.get('name')==fcda.get('doName'):
+                        reported_vars.update(self.trigger_that_var(dotype, name=lninst+do.get('name'), tempd={}, fc=triggers))
+        return reported_vars
+
+    # def test_report_control(self, ied_ld_name, clt):
+    #     print()
+    #     ied = self.get_ied_by_iedld_name(ied_ld_name)
+    #     for ld in self.__get_ld_list_from_ied(ied):
+    #         for report in self.get_rcb_list_from_ld(ld):
+    #             report_list = self.get_all_reports_dicts_list_from_rc(report)
+    #             reported_vars = self.get_reported_vars(ied.get('name'), ld, report)
+    #             for report_dict in report_list:
+    #                 print('Working with \t\t\t :::::::', report_dict['CBref'])
+    #                 print(report_dict['CBref'])
+    #                 clt.get_rcb(report_dict['CBref'])
+    #                 clt.install_handler(report_dict['CBref'], report_dict['rptID'])
+    #                 # for k, v in reported_vars.items():
+    #                 #    print('\t\tVariables: ')
+    #                 #    print(k, v, report_dict['dchg'], report_dict['qchg'])
+    #                 clt.trigger_gi(report_dict['CBref'])
+    #                 #clt.disable_report()
+    #                 clt.destroy_report()
+    #                 clt.get_report_enabled()
+    #     return True
+
+    # def test_report_control(self, ied_ld_name, clt):
+    #     print()
+    #     clt.get_rcb('TEMPLATELD0/LLN0.BR.brcbMX0201')
+    #     clt.install_handler('TEMPLATELD0/LLN0.BR.brcbMX0201', 'TEMPLATELD0/LLN0$BR$brcbMX0201')
+    #     #clt.trigger_gi('TEMPLATELD0/LLN0.BR.brcbMX0201')
+    #     #clt.disable_report()
+    #     #clt.destroy_report()
+    #     time.sleep(3)
+    #     clt.triggerReport()
+    #     #clt.get_report_enabled()
+    #     #clt.destroy_report()
+    #     return True
+    def shm_client(self, filename):
+        client = '/home/ivan/Projects/sas/rattlehead/build/test/tools/test-client'
+        connection = 'conn1'
+        timeout = str(0)
+        cmd = client+' --connection='+connection+' --file='+filename+' --timeout='+timeout +' > /dev/null'
+        proc = subprocess.run(cmd, shell = True)
+
+    def test_report_control(self, ied_ld_name, clt):
+        print()
+        print('getting RCB')
+        # clt.get_rcb('TEMPLATELD0/LLN0.BR.brcbMX0101')
+        clt.get_rcb('RP2_19LD0/LLN0.BR.brcbMX01')
+        clt.enable_report()
+        # clt.get_rcb('RP2_19LD0/LLN0.BR.brcbST01')
+        # clt.get_report_enabled()
+        # clt.install_handler()
+        # clt.get_report_enabled()
+        # clt.install_handler('TEMPLATELD0/LLN0.BR.brcbST0101', 'TEMPLATELD0/LLN0$BR$brcbST0101')
+        # clt.install_handler('TEMPLATELD0/LLN0.BR.brcbMX0101', 'TEMPLATELD0/LLN0$BR$brcbMX0101')
+        # clt.install_handler('RP2_19LD0/LLN0.BR.brcbST01', 'RP2_19LD0/LLN0$BR$brcbST01')
+        clt.install_handler('RP2_19LD0/LLN0.BR.brcbMX01', 'RP2_19LD0/LLN0$BR$brcbMX01')
+        # clt.install_handler('ECISepam80_8/LLN0.BR.brcbMX01', 'ECISepam80_8/LLN0$BR$brcbMX01')
+        # input("Waiting...")
+        # clt.install_handler()
+        # clt.enable_report()
+        # clt.get_report_enabled()
+        # clt.trigger_gi('TEMPLATELD0/LLN0.BR.brcbMX0201')
+        # clt.disable_report()
+        # clt.destroy_report()
+        print('timer')
+        time.sleep(2)
+        # clt.triggerReport()
+        # clt.get_report_enabled()
+        # clt.destroy_report()
+        return True
+
+    def get_rc_instances(self):
+        for ied in self.get_ied_list():
+            for ld in self.__get_ld_list_from_ied(ied):
+                for report in self.get_rcb_list_from_ld(ld):
+                    report_list = self.get_all_reports_dicts_list_from_rc(report)
+                    reported_vars = self.get_reported_vars(ied.get('name'), ld, report)
+                    for rd in report_list:
+                        print('Report', rd['rptID'], rd['CBref'])
+                        print('\t\t\tVars: ')
+                        for key, var in reported_vars.items():
+                            print(key, var,  rd['dchg'], rd['qchg'])
+#                   print(ied.get('name'),ld.get('inst'), report.get('name'))
+                   #print(reported_vars)
+#                   for report_dict in report_list:
+#                       print('Working with \t\t\t :::::::', report_dict['CBref'])
+#                       print(report_dict['rptID'])
+#                       print('\t\tVariables: ')
+#                       for k, v in reported_vars.items():
+#                           print(k, v, report_dict['dchg'], report_dict['qchg'])
 
 '''
 #############################################################################
@@ -1058,13 +1295,15 @@ class SclParser:
 if __name__ == "__main__":
     try:
         ip = "192.168.137.34"
-        full_ld = "ECIECI"
-        #ls = ["ECI.scd", "SCD.scd", "B20.icd" ]
-        ls = ["ECI.scd" ]
+        #full_ld = "ECIECI"
+        ls = ["/home/ivan/Projects/data/ECI.scd", "/home/ivan/Projects/data/SCD.scd", "/home/ivan/Projects/data/B20.icd" ]
+        #ls = ["B20.icd" ]
+        #ls = ["SCD.scd" ]
+        #ls = ["ECI.scd" ]
         print("*"*100)
         for i in ls:
             scl=SclParser(i)
-            scl.get_vars_fc()
+            scl.get_rc_instances()
 
             print("*"*100)
     except Exception as e:
