@@ -56,10 +56,12 @@ class IECTestCase(unittest.TestCase):
 def run_all_tests():
     filename = '/home/ivan/Projects/data/SCD.scd'
     # filename = '/home/ivan/Projects/data/B20.icd'
-    ip = '10.151.42.125'
-    # ip = '127.0.0.1'
+    # filename = '/home/ivan/Projects/data/ECI.scd'
+    # ip = '10.151.42.125'
+    ip = '127.0.0.1'
     # ied_ld_name = 'TEMPLATELD0'
     ied_ld_name = 'RP2_19LD0'
+    # ied_ld_name = 'ECISepam80_8'
     suiteIEC = unittest.TestSuite()
     suiteIEC.addTest(IECTestCase("test_reports", filename, ip, ied_ld_name))
     runnerIEC = unittest.TextTestRunner(verbosity=2)

@@ -1,0 +1,130 @@
+{
+    "web_services":{
+        "ip_addr" : "127.0.0.1",
+        "tcp_port": 8080
+    },
+
+    "params" : {
+        "sleeps_ms" : 2.0
+    },
+
+   "iface": "0.0.0.0",
+
+    "mb_servers":[
+        {
+            "tcp_port" : 502,
+            "devices"  : [
+                {
+                    "name" : "Devices.dev1",
+                    "slave_nb" : 1
+                }
+            ]
+        }
+    ],
+
+    "tested_values":[
+    {
+        "id" : "Devices.dev1.I1",
+        "sim" : {
+            "dev_name" : "Devices.dev1",
+            "tag_name" : "m3[0]",
+            "value" : {
+                "type" : "int",
+                "min"  : 0,
+                "max"  : 255
+             }
+         },
+         "web_services" : {
+             "db_name" : "Devices.dev1.I1"
+         },
+         "iec61850" : {
+         }
+    },
+    {
+        "id" : "Devices.dev1.I2",
+        "sim": {
+            "dev_name" : "Devices.dev1",
+            "tag_name" : "m3[1]",
+            "value" : {
+                "type" : "int",
+                "min" : 0,
+                "max" : 255
+            }
+        },
+        "web_services" : {
+            "db_name" : "Devices.dev1.I2"
+        },
+        "iec61850" : {
+        }
+    },
+    {
+        "id" : "Devices.dev1.I3",
+        "sim": {
+            "dev_name" : "Devices.dev1",
+            "tag_name" : "m3[2]",
+            "value" : {
+                "type" : "int",
+                "min" : 0,
+                "max" : 255
+            }
+        },
+        "web_services" : {
+            "db_name" : "Devices.dev1.I3"
+        },
+        "iec61850" : {
+        }
+    },
+    {
+        "id" : "Devices.dev1.U12",
+        "sim": {
+            "dev_name" : "Devices.dev1",
+            "tag_name" : "m3[11]",
+            "value" : {
+                "type" : "int",
+                "min" : 0,
+                "max" : 255
+            }
+        },
+        "web_services" : {
+            "db_name" : "Devices.dev1.U12"
+        },
+        "iec61850" : {
+        }
+    },
+    {
+        "id" : "Devices.dev1.U23",
+        "sim": {
+            "dev_name" : "Devices.dev1",
+            "tag_name" : "m3[12]",
+            "value" : {
+                "type" : "int",
+                "min" : 0,
+                "max" : 255
+            }
+        },
+        "web_services" : {
+            "db_name" : "Devices.dev1.U23"
+        },
+        "iec61850" : {
+        }
+    },
+    {
+        "id" : "Devices.dev1.U31",
+        "sim": {
+            "dev_name" : "Devices.dev1",
+            "tag_name" : "m3[13]",
+            "value" : {
+                "type" : "int",
+                "min" : 0,
+                "max" : 255
+            }
+        },
+        "web_services" : {
+            "db_name" : "Devices.dev1.U31"
+        },
+        "iec61850" : {
+        }
+    }
+
+    ]
+}

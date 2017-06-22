@@ -1,0 +1,48 @@
+{
+    "web_services":{
+        "ip_addr" : "127.0.0.1",
+        "tcp_port": 8080
+    },
+
+    "params" : {
+        "sleeps_ms" : 2.0
+    },
+
+   "iface": "0.0.0.0",
+
+    "mb_servers":[
+        {
+            "tcp_port" : 502,
+            "devices"  : [
+                {
+                    "name" : "Devices.modbus",
+                    "slave_nb" : 1
+                }
+            ]
+        }
+    ],
+   
+    "tested_values":[
+    {
+        "id" : "Devices.modbus.I1",
+        "sim" : {
+            "dev_name" : "Devices.modbus",
+            "tag_name" : "m3[1]",
+            "value" : {
+                "type" : "int",
+                "min"  : 0,
+                "max"  : 255
+             }
+         },
+         "web_services" : {
+             "db_name" : "Devices.modbus.I1"
+         },
+         "iec61850" : {
+         }
+    }
+    ]
+}
+
+
+
+
